@@ -1,9 +1,9 @@
 @echo off
 setlocal EnableExtensions
 chcp 65001 >nul
-title ACCE v2.0 - Web 启动器
+title ACCE v2.0 - Web
 
-REM 始终使用本脚本所在目录作为项目根目录（可随意移动本文件）
+REM 项目根 = 本 bat 所在目录（请把本文件放在与 web_backend.py 同一层）
 set "ROOT=%~dp0"
 cd /d "%ROOT%" || (
     echo [错误] 无法进入目录: %ROOT%
@@ -11,58 +11,65 @@ cd /d "%ROOT%" || (
     exit /b 1
 )
 
-echo ================================================================================
-echo                    ACCE v2.0 - Web 界面
-echo ================================================================================
-echo.
-echo [目录] %ROOT%
-echo [说明] 修改页面/CSS 后：先 Ctrl+C 停服，再重新运行本脚本；浏览器 Ctrl+F5 强刷
-echo.
-
-if not exist "%ROOT%is\wrds.txt" (
-    echo [警告] 未找到 is\wrds.txt，WRDS 将无法自动连接。
-    echo        请创建文件: %ROOT%is\wrds.txt
-    echo        示例:
-    echo          username: your_wrds_username
-    echo          password: your_wrds_password
+if not exist "%ROOT%web_backend.py" (
+    echo [错误] 当前目录下没有 web_backend.py
     echo.
-)
-
-if not exist "%ROOT%is\api assents.txt" (
-    echo [警告] 未找到 is\api assents.txt，LLM 可能无法连接。
-    echo        请创建文件: %ROOT%is\api assents.txt
-    echo        示例:
-    echo          deepseek: sk-xxxxxxxx
-    echo          kimi: sk-xxxxxxxx
-    echo          gemini: AIzaSyxxxxxxxx
+    echo 当前路径: %ROOT%
     echo.
-) else (
-    echo [OK] 检测到 is\api assents.txt（LLM API 将自动加载，无需每次配置）
-)
-
-where python >nul 2>&1
-if errorlevel 1 (
-    echo [错误] 未在 PATH 中找到 python，请先安装 Python 3 并勾选「Add to PATH」。
+    echo 常见原因: 从 GitHub 下载 zip 后出现「双层文件夹」
+    echo   请进入**内层**含有 web_backend.py 的文件夹，再双击本 bat，
+    echo   或把本 bat 复制到与 web_backend.py 同一目录。
+    echo.
     pause
     exit /b 1
 )
 
-echo [1/2] 安装/检查依赖...
-if exist "%ROOT%web_requirements.txt" (
-    python -m pip install -q -r "%ROOT%web_requirements.txt"
+where python >nul 2>&1
+if errorlevel 1 (
+    where py >nul 2>&1
+    if errorlevel 1 (
+        echo [错误] 未找到 python。请安装 Python 3.11+ 并勾选「Add Python to PATH」，
+        echo       或在 Microsoft Store 安装 Python。
+        pause
+        exit /b 1
+    )
+    set "PY=py -3"
 ) else (
-    python -m pip install -q flask flask-sock flask-cors python-dotenv
+    set "PY=python"
 )
 
+echo ================================================================================
+echo                    ACCE v2.0 - Web 界面
+echo ================================================================================
+echo [目录] %ROOT%
+echo [Python] %PY%
 echo.
-echo [2/2] 启动服务  http://localhost:5000
-echo       按 Ctrl+C 停止
+
+if not exist "%ROOT%is\wrds.txt" (
+    echo [提示] 未找到 is\wrds.txt 时 WRDS 不可用，可稍后配置。
+    echo.
+)
+
+echo [1/2] 安装依赖 ^(若失败请看下方报错^) ...
+if exist "%ROOT%web_requirements.txt" (
+    %PY% -m pip install -r "%ROOT%web_requirements.txt"
+) else (
+    %PY% -m pip install flask flask-sock flask-cors python-dotenv
+)
+echo.
+
+echo [2/2] 启动 http://localhost:5000  ^(Ctrl+C 停止^)
 echo ================================================================================
 echo.
 
-python -X utf8 web_backend.py
+%PY% -X utf8 "%ROOT%web_backend.py"
+set "ERR=%ERRORLEVEL%"
 
 echo.
-echo 服务已停止
+if not "%ERR%"=="0" (
+    echo [错误] 进程退出码: %ERR% 。请把上方黑色窗口里的英文报错复制下来排查。
+) else (
+    echo 服务已结束。
+)
 pause
 endlocal

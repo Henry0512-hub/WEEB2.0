@@ -1,0 +1,15 @@
+# ACC102 Track 4: web app + Jupyter notebook + WRDS chart pipeline
+-r web_requirements.txt
+
+# Vendored Micro-sheep/efinance (pinned; run after clone: git clone https://github.com/Micro-sheep/efinance.git vendor/efinance)
+-e ./vendor/efinance
+
+pandas>=1.5
+numpy>=1.23
+matplotlib>=3.7
+jupyter>=1.0.0
+ipykernel>=6.0
+wrds>=3.1.0
+yfinance>=0.2.0
+python-dotenv>=1.0.0
+akshare>=1.14.0

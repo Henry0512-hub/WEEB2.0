@@ -1,0 +1,20 @@
+﻿ACCE 1.0 绮剧畝鍖咃紙鐢?tradingagents/package_acce_1.0_slim.ps1 鐢熸垚锛岃緭鍑轰綅浜庢湰浠撳簱 tradingagents/ 鐩綍涓嬶級
+
+鏈寘鍚細
+- .git 鍘嗗彶
+- new/ 涓嬬殑閲嶅宸ョ▼鍓湰
+- vendor/锛堣 pip install -r requirements.txt锛屽惈 efinance 绛夛級
+- results/ 杩愯缁撴灉锛堥娆¤繍琛岃嚜鍔ㄧ敓鎴愶級
+- 鍚勭被 test_*.py / 澶у瀷娴嬭瘯鍥捐〃
+- notebooks/ 涓庡鏁?*.md 鏂囨。
+
+璇峰鍒?.env.example 涓?.env 骞堕厤缃?is/ 涓嬪瘑閽ユ枃浠跺悗杩愯锛?
+  pip install -r web_requirements.txt
+  python web_backend.py
+
+鍚姩鍣紙瑙ｅ帇鍚庡弻鍑伙紝鑻辨枃鏂囦欢鍚嶉伩鍏嶄贡鐮侊級锛?
+  START_WEB.bat        鈥?Web 鐣岄潰
+  INSTALL_DEPS.bat     鈥?浠呭畨瑁呬緷璧栵紙棣栨锛?
+  START_CLI.bat        鈥?浜や簰寮忓畬鏁村垎鏋愶紙鍙€夛級
+
+鑻ユ牴鐩綍鍙︽湁涓枃鍚?.bat锛屼笌涓婅堪鍔熻兘鐩稿悓銆?
