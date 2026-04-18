@@ -1,0 +1,8 @@
+[
+  {"symbol": "AAPL", "market": "us", "label": "Apple"},
+  {"symbol": "TSLA", "market": "us", "label": "Tesla"},
+  {"symbol": "NVDA", "market": "us", "label": "NVIDIA"},
+  {"symbol": "300308", "market": "cn", "label": "中际旭创"},
+  {"symbol": "002475", "market": "cn", "label": "立讯精密"},
+  {"symbol": "0700.HK", "market": "hk", "label": "腾讯"}
+]

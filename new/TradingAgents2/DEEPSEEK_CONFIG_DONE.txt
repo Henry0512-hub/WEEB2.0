@@ -1,0 +1,11 @@
+DeepSeek API配置完成！
+
+密钥: sk-61d73d41bcb64482916d75f0709e121b
+
+使用方法:
+1. 双击: 启动TradingAgents加密货币版.bat
+2. 选择: 2 (WRDS+DeepSeek智能分析)
+3. 输入股票代码和日期
+
+或直接运行:
+python run_wrds_deepseek.py

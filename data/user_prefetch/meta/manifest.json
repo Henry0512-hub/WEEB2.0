@@ -1,0 +1,71 @@
+{
+  "start": "2020-01-01",
+  "end": "2026-04-13",
+  "out_root": "C:\\Users\\lenovo\\TradingAgents\\data\\user_prefetch",
+  "items": {
+    "us:AAPL": {
+      "symbol": "AAPL",
+      "market": "us",
+      "sources": {
+        "yfinance": null,
+        "wrds": {
+          "path": "C:\\Users\\lenovo\\TradingAgents\\data\\user_prefetch\\wrds\\AAPL.csv",
+          "rows": 1257
+        }
+      }
+    },
+    "us:TSLA": {
+      "symbol": "TSLA",
+      "market": "us",
+      "sources": {
+        "yfinance": null,
+        "wrds": {
+          "path": "C:\\Users\\lenovo\\TradingAgents\\data\\user_prefetch\\wrds\\TSLA.csv",
+          "rows": 1257
+        }
+      }
+    },
+    "us:NVDA": {
+      "symbol": "NVDA",
+      "market": "us",
+      "sources": {
+        "yfinance": null,
+        "wrds": {
+          "path": "C:\\Users\\lenovo\\TradingAgents\\data\\user_prefetch\\wrds\\NVDA.csv",
+          "rows": 1257
+        }
+      }
+    },
+    "cn:300308": {
+      "symbol": "300308",
+      "market": "cn",
+      "sources": {
+        "yfinance": null,
+        "akshare": {
+          "path": "C:\\Users\\lenovo\\TradingAgents\\data\\user_prefetch\\akshare\\300308.csv",
+          "rows": 1519
+        },
+        "efinance": {
+          "path": "C:\\Users\\lenovo\\TradingAgents\\data\\user_prefetch\\efinance\\300308.csv",
+          "rows": 1519
+        }
+      }
+    },
+    "cn:002475": {
+      "symbol": "002475",
+      "market": "cn",
+      "sources": {
+        "yfinance": null,
+        "akshare": null,
+        "efinance": null
+      }
+    },
+    "hk:0700.HK": {
+      "symbol": "0700.HK",
+      "market": "hk",
+      "sources": {
+        "yfinance": null
+      }
+    }
+  }
+}
