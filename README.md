@@ -1,5 +1,7 @@
 # TradingAgents - ACCE v2.0 (AI Trading Analysis Platform)
 
+**Quick start (Windows, no garbled console):** double-click **`QUICKSTART.bat`** in the folder that contains `web_backend.py`, then open **http://localhost:5000**. Details: **`QUICKSTART.md`**.
+
 **A comprehensive local-first multi-agent AI system for stock, A-share, and crypto analysis.**
 
 This project combines:
