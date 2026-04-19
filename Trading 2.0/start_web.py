@@ -20,25 +20,22 @@ if _T20 not in sys.path:
 if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
-# 1) 子进程会执行 Trading 2.0/run_analysis_web.py — 先 patch Popen，再 import web_backend
-_wrapped = subprocess.Popen
+# 1) 子进程改为执行 Trading 2.0/run_analysis_web.py
+# 必须用「类」替换 Popen：若换成普通函数，asyncio 里 `class Popen(subprocess.Popen)` 会崩溃（Python 3.13）。
+class _PopenTrading20(subprocess.Popen):
+    def __init__(self, args, *pargs, **kwargs):
+        if isinstance(args, (list, tuple)):
+            args = list(args)
+            alt = os.path.join(_T20, "run_analysis_web.py")
+            for i, part in enumerate(args):
+                s = os.path.normpath(str(part))
+                if s.endswith(os.path.normpath("run_analysis_web.py")) and "Trading 2.0" not in s:
+                    args[i] = alt
+                    break
+        super().__init__(args, *pargs, **kwargs)
 
 
-def _popen_trading20(*args, **kwargs):
-    cmd = args[0] if args else None
-    if isinstance(cmd, (list, tuple)):
-        cmd = list(cmd)
-        alt = os.path.join(_T20, "run_analysis_web.py")
-        for i, part in enumerate(cmd):
-            s = os.path.normpath(str(part))
-            if s.endswith(os.path.normpath("run_analysis_web.py")) and "Trading 2.0" not in s:
-                cmd[i] = alt
-                break
-        args = (cmd,) + tuple(args[1:])
-    return _wrapped(*args, **kwargs)
-
-
-subprocess.Popen = _popen_trading20
+subprocess.Popen = _PopenTrading20
 
 # 2) 分析管线补丁（与 web 子进程一致）
 from bootstrap import apply_no_crypto_patch
