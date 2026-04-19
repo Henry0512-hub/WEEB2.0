@@ -47,21 +47,11 @@ pip install -r web_requirements.txt
 python -X utf8 web_backend.py
 ```
 
-## 6. Trading 2.0 (optional crypto-off mode)
-
-From project root:
-
-```bat
-python "Trading 2.0\start_web.py"
-```
-
-Or double-click **`Trading 2.0\START_WEB.bat`** (if present).
-
 ## Troubleshooting
 
 | Problem | What to do |
 |--------|------------|
-| `TypeError: ... windows_utils.py ... Popen ... code must be code` when using **Trading 2.0** | Fixed in current repo (`start_web.py` uses a real `Popen` subclass). `git pull` or re-download. Use root **`QUICKSTART.bat`** if you do not need Trading 2.0. |
+| `TypeError: ... windows_utils.py ... Popen ...` when starting Web | Usually a broken env or patched `subprocess`. Use a clean venv; remove stray `~*` folders under `site-packages`. |
 | `WARNING: Ignoring invalid distribution ~odelscope` | A broken **modelscope** install left a temp folder. Close Python, delete `~odelscope` under your `Python313\Lib\site-packages\`, then `python -m pip install --upgrade pip`. |
 | Black window shows garbage text | Use **`QUICKSTART.bat`** only; do not rely on old `.bat` files with Chinese inside. |
 | `web_backend.py not found` | You are in the wrong folder; go one level deeper from the ZIP. |
