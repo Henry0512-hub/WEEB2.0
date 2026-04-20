@@ -17,6 +17,7 @@ This project combines:
 **Author**: Heng.Yang (Student No. 2469312)  
 **Last Updated**: 2026-04-18  
 **Status**: ✅ Production-ready web interface with full agent system
+However, as a educational edition only US equality based on wrds is useful and the whole app is going to be released in 2026
 
 ---
 
