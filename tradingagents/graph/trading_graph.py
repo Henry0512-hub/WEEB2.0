@@ -198,8 +198,15 @@ class TradingAgentsGraph:
             ),
         }
 
-    def propagate(self, company_name, trade_date):
-        """Run the trading agents graph for a company on a specific date."""
+    def propagate(self, company_name, trade_date, *, squeeze_decision: bool = True):
+        """Run the trading agents graph for a company on a specific date.
+
+        Args:
+            squeeze_decision: If True (default), run :meth:`process_signal` so the
+                second return value is a single rating token (BUY/HOLD/...). If False,
+                the second value is the full portfolio-manager report text (e.g. Web UI
+                five-section write-up) and no extra LLM squeeze call is made.
+        """
 
         self.ticker = company_name
 
@@ -230,8 +237,12 @@ class TradingAgentsGraph:
         # Log state
         self._log_state(trade_date, final_state)
 
-        # Return decision and processed signal
-        return final_state, self.process_signal(final_state["final_trade_decision"])
+        raw_decision = final_state.get("final_trade_decision") or ""
+        if squeeze_decision and str(raw_decision).strip():
+            return final_state, self.process_signal(str(raw_decision))
+        if squeeze_decision:
+            return final_state, ""
+        return final_state, str(raw_decision)
 
     def _log_state(self, trade_date, final_state):
         """Log the final state to a JSON file."""

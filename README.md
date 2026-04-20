@@ -8,7 +8,7 @@ This project combines:
 - **8 specialized AI agents** orchestrated via LangGraph
 - **Intelligent multi-source data fetching** (WRDS academic data, akshare, efinance, Alpha Vantage, CoinGecko)
 - **LLM-powered report generation** (DeepSeek recommended, Kimi, Gemini)
-- **Modern web UI** with real-time neon cyberpunk candlestick charts + MA indicators
+- **Modern web UI** in an **industrial steam-age workshop** look (brass, cast iron, parchment, coal-smoke tones) with real-time candlestick charts + MA indicators
 - **News analysis** with Claw crawler and sentiment tools
 - **CLI tools, tests, prefetchers, and notebooks**
 
@@ -47,7 +47,7 @@ This project combines:
 
 ### Interfaces
 1. **Web UI** (`web_backend.py` + `templates/index.html`): 
-   - Neon cyberpunk design (#00ffff cyan, #ff00ff magenta, dark theme)
+   - **Industrial Revolution / steam-era** visual language: soot-and-wood dark base, **brass & copper** accents, **parchment** text, subtle riveted-plate and workshop grid overlays (`static/industrial.css`)
    - Real-time **candlestick K-line charts** with Chart.js + financial plugin, MA5/MA20/MA50 lines
    - WebSocket live progress, chart updates, report streaming
    - Model/market/symbol/date/language selection (zh/en reports)
@@ -147,8 +147,8 @@ TradingAgents/
 ├── web_backend.py              # Flask + Flask-Sock backend, WS parsing for charts/reports
 ├── run_analysis_web.py         # Core analysis runner called by web (UTF8, smart config)
 ├── run_integrated_analysis.py  # Interactive CLI with full agents
-├── templates/index.html        # Neon UI, Chart.js candlestick, WS client
-├── static/industrial.css       # Cyberpunk neon styles (inline tool available)
+├── templates/index.html        # Steam-age industrial UI, Chart.js candlestick, WS client
+├── static/industrial.css       # Brass / iron / parchment workshop theme (inline tool available)
 ├── 启动ACCE_Web.bat            # One-click Windows launcher
 ├── tradingagents/              # Core package
 │   ├── agents/                 # 8 AI agents + managers (bull/bear, debators, trader, portfolio)
@@ -244,9 +244,9 @@ Configure via:
 
 ## 🎨 Web UI Details
 
-- **Design**: Postmodern neon cyberpunk (cyan/magenta gradients, glassmorphism, grid, glow effects)
-- **Charts**: True candlestick (`type: 'candlestick'`), overlaid MA lines (white/yellow/orange), responsive
-- **Workflow Visualization**: Agent nodes with neon effects
+- **Design**: **Industrial steam-age trading floor** — deep soot/wood backgrounds, brass and copper trim, parchment-like panels, soft gas-lamp warmth, and machined grid texture (not neon cyberpunk). Typography leans **serif display + readable body** for a ledger/workshop feel.
+- **Charts**: True candlestick (`type: 'candlestick'`), overlaid MA lines (contrasting against the dark industrial canvas), responsive
+- **Workflow Visualization**: Agent nodes styled as part of the same brass-and-iron instrument panel
 - **Live Updates**: WebSocket streams agent outputs, price data (parsed CSV OHLC), progress
 - **Report Parsing**: Filters noise (JSON, warnings, tool calls), keeps agent insights, recommendations, CSV data for charts
 - **Persistence**: Auto-reload templates, no-cache for dev

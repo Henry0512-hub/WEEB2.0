@@ -1,10 +1,28 @@
 import os
 from typing import Any, Optional
 
+import httpx
 from langchain_openai import ChatOpenAI
 
 from .base_client import BaseLLMClient, normalize_content
 from .validators import validate_model
+
+
+def _http_trust_env(is_native_openai: bool) -> bool:
+    """Whether httpx should honor HTTP(S)_PROXY from the environment.
+
+    Misconfigured Windows/system proxies often cause TLS resets (WinError 10054)
+    to third-party OpenAI-compatible APIs (e.g. Moonshot). Native OpenAI keeps
+    default trust so corporate proxy setups still work.
+
+    HTTPX_TRUST_ENV=1 / 0 forces on/off for all endpoints.
+    """
+    v = os.environ.get("HTTPX_TRUST_ENV", "").strip().lower()
+    if v in ("0", "false", "no", "off"):
+        return False
+    if v in ("1", "true", "yes", "on"):
+        return True
+    return bool(is_native_openai)
 
 
 class NormalizedChatOpenAI(ChatOpenAI):
@@ -83,6 +101,15 @@ class OpenAIClient(BaseLLMClient):
         )
         if is_native_openai:
             llm_kwargs["use_responses_api"] = True
+
+        timeout = float(self.kwargs.get("timeout", 120.0))
+        trust = _http_trust_env(is_native_openai)
+        if "http_client" not in llm_kwargs:
+            llm_kwargs["http_client"] = httpx.Client(trust_env=trust, timeout=timeout)
+        if "http_async_client" not in llm_kwargs:
+            llm_kwargs["http_async_client"] = httpx.AsyncClient(
+                trust_env=trust, timeout=timeout
+            )
 
         return NormalizedChatOpenAI(**llm_kwargs)
 

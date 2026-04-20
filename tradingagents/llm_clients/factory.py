@@ -21,13 +21,18 @@ def create_llm_client(
         **kwargs: Additional provider-specific arguments
             - http_client: Custom httpx.Client for SSL proxy or certificate customization
             - http_async_client: Custom httpx.AsyncClient for async operations
-            - timeout: Request timeout in seconds
+            - timeout: Request timeout in seconds (also applied to default httpx clients)
             - max_retries: Maximum retry attempts
             - api_key: API key for the provider
             - callbacks: LangChain callbacks
 
     Returns:
         Configured BaseLLMClient instance
+
+    Environment:
+        HTTPX_TRUST_ENV: For OpenAIClient, unset means httpx ignores system HTTP(S)_PROXY
+        unless the endpoint is native ``api.openai.com`` (helps Moonshot etc. on Windows).
+        Set ``1`` / ``0`` to force trust_env on / off.
 
     Raises:
         ValueError: If provider is not supported

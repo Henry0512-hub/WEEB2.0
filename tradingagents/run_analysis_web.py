@@ -1,18 +1,20 @@
 """
-ACCE v2.0 - Web 版分析脚本（完整 8 智能体 LangGraph，可被 Web 后端调用）
+ACCE v2.0 - Web analysis runner (invoked by web_backend).
 
-满血默认：多智能体辩论、新闻/基本面/技术面链路、智能路由（含加密货币与 A 股等）。
-可选环境变量 ACCE_DIRECT_LLM_ONLY=1 时退回旧版「仅直连 LLM」模式（应急）。
+- Homework mode (ACCE_HOMEWORK_MODE=1, default): single direct LLM call with real chart context (fast).
+  Set ACCE_HOMEWORK_USE_FULL_GRAPH=1 to run the full 8-agent LangGraph instead.
+- Professional mode (ACCE_HOMEWORK_MODE=0): full multi-agent graph unless ACCE_DIRECT_LLM_ONLY=1.
 """
 
 from __future__ import annotations
 
 import os
 import sys
+
 from datetime import datetime
 from dotenv import load_dotenv
 
-# 设置输出编码为 UTF-8，避免 Windows GBK 问题
+# UTF-8 stdout/stderr on Windows (avoid GBK mojibake)
 if sys.platform == "win32":
     import io
 
@@ -26,10 +28,24 @@ from tradingagents.graph.trading_graph import TradingAgentsGraph
 from tradingagents.default_config import DEFAULT_CONFIG
 from tradingagents.dataflows.smart_router import get_smart_config
 from tradingagents.llm_clients import create_llm_client
+from tradingagents.agents.utils.agent_utils import is_homework_simple_mode
+
+
+def _env_truthy(name: str) -> bool:
+    return os.environ.get(name, "").strip().lower() in ("1", "true", "yes", "on")
+
+
+def _use_direct_llm_path() -> bool:
+    """Homework default: one-shot LLM; optional env overrides."""
+    if _env_truthy("ACCE_DIRECT_LLM_ONLY"):
+        return True
+    if is_homework_simple_mode() and not _env_truthy("ACCE_HOMEWORK_USE_FULL_GRAPH"):
+        return True
+    return False
 
 
 def _build_real_market_context(ticker: str, start_date: str, end_date: str, market_type: str) -> str:
-    """直连 LLM 模式用：拉取行情摘要。"""
+    """Direct-LLM mode: fetch a compact market context string."""
     try:
         from fast_chart_data import get_wrds_chart_data
 
@@ -42,14 +58,27 @@ def _build_real_market_context(ticker: str, start_date: str, end_date: str, mark
             )
             or {}
         )
-        summary = chart.get("summary") or {}
-        ohlcv = chart.get("ohlcv") or {}
+        inner = chart.get("data") if isinstance(chart.get("data"), dict) else chart
+        summary = inner.get("summary") or {}
+        ohlcv = inner.get("ohlcv") or {}
+        indicators = inner.get("indicators") or {}
         dates = ohlcv.get("date") or []
         closes = ohlcv.get("close") or []
         n = min(len(dates), len(closes), 20)
         tail = []
         for i in range(max(0, len(dates) - n), len(dates)):
             tail.append(f"{dates[i]}: {closes[i]}")
+        boll = indicators.get("BOLL") if isinstance(indicators.get("BOLL"), dict) else {}
+        boll_snap = []
+        if boll and closes:
+            li = len(closes) - 1
+            for label, key in (("upper", "UPPER"), ("middle", "MIDDLE"), ("lower", "LOWER")):
+                arr = boll.get(key)
+                if isinstance(arr, list) and li < len(arr) and arr[li] is not None:
+                    try:
+                        boll_snap.append(f"{label}: {round(float(arr[li]), 4)}")
+                    except (TypeError, ValueError):
+                        pass
         context_lines = [
             f"Ticker: {ticker}",
             f"Market: {market_type}",
@@ -60,6 +89,8 @@ def _build_real_market_context(ticker: str, start_date: str, end_date: str, mark
             "Recent closes:",
             *tail,
         ]
+        if boll_snap:
+            context_lines.extend(["Bollinger Bands (last bar, from chart pipeline):", ", ".join(boll_snap)])
         return "\n".join(str(x) for x in context_lines if x is not None)
     except Exception as e:
         return f"Ticker: {ticker}\nMarket: {market_type}\nRange: {start_date} to {end_date}\nData fetch failed: {e}"
@@ -73,23 +104,36 @@ def _generate_direct_llm_report(
     market_type: str,
     report_language: str,
 ) -> str:
-    """应急：仅 LLM、无多智能体图。"""
+    """Emergency path: LLM only, no multi-agent graph."""
     market_ctx = _build_real_market_context(ticker, start_date, end_date, market_type)
-    lang = "Chinese" if (report_language or "zh").lower() in ("zh", "cn", "chinese") else "English"
-    length_hint = "约1000字" if lang == "Chinese" else "about 600-800 words"
+    lang = "Chinese" if (report_language or "en").lower() in ("zh", "cn", "chinese") else "English"
+    if is_homework_simple_mode():
+        length_hint = "约550–900字" if lang == "Chinese" else "about 380–620 words"
+        extra = (
+            "\nCoursework depth: include (2) **basic fundamentals/financials** from credible general knowledge "
+            "only where the context lacks filings—do not invent specific numbers; say unknown if needed. "
+            "(3) **Technical analysis must discuss Bollinger Bands** using the provided upper/middle/lower snapshot "
+            "if present; otherwise state bands are not in context and comment only on price action shown."
+            if lang != "Chinese"
+            else "\n作业深度：(2) **基本面与财务**要结合常识与上下文，不得编造具体财报数字；缺数据请写未知。(3) **技术分析必须讨论布林带**："
+            "若上下文中给出上轨/中轨/下轨快照，须结合收盘价说明超买/超卖或贴轨；若无则写明并仅根据已有价格序列简述。"
+        )
+    else:
+        length_hint = "约1000字" if lang == "Chinese" else "about 600–800 words"
+        extra = ""
     prompt = f"""You are a professional equity analyst.
 Use ONLY the provided real market data context and do not fabricate missing figures.
-Do NOT use words like 模拟/演示/mock/demo/dummy/example/disclaimer in output.
-Do NOT output disclaimer section.
+Do NOT use mock/demo/dummy/example/disclaimer framing in output.
 
 Output language: {lang}
 Length: {length_hint}
 Required sections:
-1) 核心观点 / Core View
-2) 基本面简述 / Fundamentals
-3) 技术分析 / Technicals
-4) 风险提示 / Risks
-5) 投资建议 / Recommendation
+1) Core View
+2) Fundamentals
+3) Technical Analysis
+4) Risk Factors
+5) Investment Recommendation
+{extra}
 
 Market data context:
 {market_ctx}
@@ -125,7 +169,7 @@ def _run_full_agent_graph(
     report_language: str,
     analysis_type: str,
 ) -> str:
-    """完整 TradingAgents 多智能体图。"""
+    """Full TradingAgents multi-agent graph."""
     trade_config = DEFAULT_CONFIG.copy()
 
     if config["provider"] == "openai":
@@ -141,10 +185,10 @@ def _run_full_agent_graph(
         os.environ["GOOGLE_API_KEY"] = config["api_key"]
 
     trade_config["output_language"] = (
-        "Chinese" if (report_language or "zh").lower() in ("zh", "cn", "chinese") else "English"
+        "Chinese" if (report_language or "en").lower() in ("zh", "cn", "chinese") else "English"
     )
 
-    # 满血：更高轮次与递归上限（可用环境变量覆盖）
+    # Debate / recursion limits (override via env)
     trade_config["max_debate_rounds"] = int(os.environ.get("ACCE_MAX_DEBATE_ROUNDS", "3"))
     trade_config["max_risk_discuss_rounds"] = int(os.environ.get("ACCE_MAX_RISK_ROUNDS", "3"))
     trade_config["max_recur_limit"] = int(os.environ.get("ACCE_MAX_RECUR_LIMIT", "200"))
@@ -168,41 +212,48 @@ def _run_full_agent_graph(
 
     mt = (market_type or "us").lower()
     if mt == "us" and start_dt <= cutoff_dt:
+        # Coursework: only OHLC uses WRDS; other categories stay on default vendors
         trade_config["data_vendors"]["core_stock_apis"] = "wrds"
-        trade_config["data_vendors"]["fundamental_data"] = "wrds"
-        print("[数据源] 美股历史区间：优先 WRDS（学术库）")
+        print("[Data] US historical window: OHLC -> WRDS (CRSP); fundamentals/indicators/news -> default vendors (non-WRDS)")
     elif mt == "us" and start_dt > cutoff_dt:
         trade_config["data_vendors"]["core_stock_apis"] = "alpha_vantage"
         trade_config["data_vendors"]["fundamental_data"] = "alpha_vantage"
-        print("[数据源] 美股近期：Alpha Vantage / yfinance")
+        print("[Data] Recent US window: Alpha Vantage / yfinance")
     elif mt == "cn":
         trade_config["data_vendors"]["core_stock_apis"] = "efinance"
         trade_config["data_vendors"]["fundamental_data"] = "efinance"
-        print("[数据源] A 股：efinance / akshare 路由")
+        print("[Data] CN A-shares: efinance / akshare routing")
 
     trade_config = get_smart_config(ticker, trade_config)
 
-    print("[模式] 完整多智能体 LangGraph（8 智能体 + 辩论/风险讨论）")
-    print(f"[分析] 基准日 {end_date}，区间 {start_date} ~ {end_date}")
+    print("[Mode] Full multi-agent LangGraph (8 agents + debate / risk discussion)")
+    print(f"[Analysis] As-of {end_date}, window {start_date} .. {end_date}")
 
-    ta = TradingAgentsGraph(debug=True, config=trade_config)
-    _, decision = ta.propagate(ticker, end_date)
+    # Subprocess captures full stdout; graph debug pretty_prints would pollute the report panel.
+    _graph_debug = os.environ.get("ACCE_GRAPH_DEBUG", "").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+    )
+    ta = TradingAgentsGraph(debug=_graph_debug, config=trade_config)
+    _, decision = ta.propagate(ticker, end_date, squeeze_decision=False)
     return str(decision)
 
 
 def main() -> None:
     if len(sys.argv) < 6:
         print("=" * 80)
-        print(" " * 10 + "ACCE v2.0 - Web 集成（完整多智能体 / 可选直连 LLM）")
+        print(" " * 10 + "ACCE v2.0 - Web runner (homework=direct LLM by default)")
         print("=" * 80)
         print()
-        print("用法:")
+        print("Usage:")
         print(
             "  python run_analysis_web.py <llm_choice> <ticker> <start_date> <end_date> "
             "<analysis_type> [market_type] [report_language]"
         )
         print()
-        print("环境变量 ACCE_DIRECT_LLM_ONLY=1 时仅走直连 LLM（无多智能体）。")
+        print("Env: ACCE_HOMEWORK_MODE=1 (default) → direct LLM; ACCE_HOMEWORK_USE_FULL_GRAPH=1 → 8-agent graph.")
+        print("     ACCE_HOMEWORK_MODE=0 → multi-agent graph; ACCE_DIRECT_LLM_ONLY=1 → always direct LLM.")
         print()
         return
 
@@ -212,14 +263,14 @@ def main() -> None:
     end_date = sys.argv[4] if sys.argv[4] != "None" else datetime.now().strftime("%Y-%m-%d")
     analysis_type = sys.argv[5]
     market_type = sys.argv[6] if len(sys.argv) >= 7 else "us"
-    report_language = sys.argv[7] if len(sys.argv) >= 8 else "zh"
+    report_language = sys.argv[7] if len(sys.argv) >= 8 else "en"
 
     ticker = raw_ticker.upper() if (market_type or "us").lower() == "us" else raw_ticker
 
-    print("[Loading] 正在加载 API 密钥...")
+    print("[Loading] Loading API keys...")
     api_keys = load_llm_api_keys()
     if api_keys:
-        print(f"[OK] 已加载 {len(api_keys)} 个 LLM 密钥")
+        print(f"[OK] Loaded {len(api_keys)} LLM key(s)")
 
     analyst_configs = {
         "1": {
@@ -246,27 +297,35 @@ def main() -> None:
 
     config = analyst_configs.get(llm_choice)
     if not config or not config.get("api_key"):
-        print("[错误] 无效的分析师选择或缺少 API 密钥")
+        print("[Error] Invalid analyst choice or missing API key")
         sys.exit(1)
 
-    print(f"[已确认] 使用 {config['name']}")
+    print(f"[OK] Using {config['name']}")
 
     market_names = {
-        "us": "美股",
-        "cn": "A股",
-        "hk": "港股",
-        "tw": "台股",
-        "crypto": "加密货币",
+        "us": "US equities",
+        "cn": "A-shares",
+        "hk": "HK equities",
+        "tw": "Taiwan",
+        "crypto": "Crypto",
     }
-    print(f"[已确认] 市场: {market_names.get((market_type or 'us').lower(), market_type)}")
-    print(f"[已确认] 标的 {ticker}，{start_date} ~ {end_date}")
+    print(f"[OK] Market: {market_names.get((market_type or 'us').lower(), market_type)}")
+    print(f"[OK] Ticker {ticker}, {start_date} .. {end_date}")
 
     os.environ["ANALYSIS_START_DATE"] = start_date
     os.environ["ANALYSIS_END_DATE"] = end_date
 
     try:
-        if os.environ.get("ACCE_DIRECT_LLM_ONLY", "").strip().lower() in ("1", "true", "yes"):
-            print("[模式] 直连 LLM（ACCE_DIRECT_LLM_ONLY）")
+        if _use_direct_llm_path():
+            if _env_truthy("ACCE_DIRECT_LLM_ONLY"):
+                print("[Mode] Direct LLM (ACCE_DIRECT_LLM_ONLY)", flush=True)
+            elif is_homework_simple_mode():
+                print(
+                    "[Mode] Homework: direct LLM (set ACCE_HOMEWORK_USE_FULL_GRAPH=1 for full 8-agent graph)",
+                    flush=True,
+                )
+            else:
+                print("[Mode] Direct LLM", flush=True)
             decision = _generate_direct_llm_report(
                 config=config,
                 ticker=ticker,
@@ -288,7 +347,7 @@ def main() -> None:
 
         print()
         print("=" * 80)
-        print("分析完成！")
+        print("Analysis complete.")
         print("=" * 80)
         print()
         print(decision)
@@ -297,7 +356,7 @@ def main() -> None:
     except Exception as e:
         print()
         print("=" * 80)
-        print(f"[错误] 分析失败: {e}")
+        print(f"[Error] Analysis failed: {e}")
         print("=" * 80)
         import traceback
 

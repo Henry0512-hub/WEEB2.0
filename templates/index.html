@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,8 +7,8 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta name="ntca-template" content="2026-04-14-admiralty-ui">
     <meta name="theme-color" content="#141008">
-    <title>NTCA Platform — 智能交易分析</title>
-    <!-- 由 web_backend 提供：templates/index.html；强刷后 ntca-template 应更新 -->
+    <title>NTCA Platform — Intelligent Trading Analytics</title>
+    <!-- Served by web_backend: templates/index.html -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=Noto+Serif+SC:wght@400;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
@@ -39,7 +39,7 @@
     --metal-rim: linear-gradient(180deg, rgba(120, 98, 62, 0.55), rgba(42, 34, 26, 0.95));
     --shadow-panel: inset 0 1px 0 rgba(255, 215, 170, 0.08), inset 0 -2px 10px rgba(0, 0, 0, 0.42), 0 14px 32px rgba(0, 0, 0, 0.5);
     --shadow-inset-deep: inset 0 2px 8px rgba(0, 0, 0, 0.45);
-    /* 兼容内联报告里的变量 */
+    /* Inline report theme vars */
     --neon-cyan: #b8860b;
     --neon-magenta: #8b4513;
     --neon-green: #1e5c45;
@@ -62,7 +62,7 @@
     box-sizing: border-box;
 }
 
-/* 避免与 scrollIntoView / 动态内容叠加时出现整页无法滚动；锚点平滑由脚本按需处理 */
+/* Avoid scroll lock with scrollIntoView + dynamic content; smooth scroll handled in script */
 html {
     scroll-behavior: auto;
 }
@@ -83,7 +83,7 @@ body {
     color: var(--ink);
 }
 
-/* 背景：煤烟渐变 + 微弱齿轮感 */
+/* Background: coal-smoke gradient + subtle gear texture */
 .bg-animation {
     position: fixed;
     inset: 0;
@@ -198,7 +198,7 @@ body {
     background: radial-gradient(ellipse 75% 65% at 50% 50%, transparent 35%, rgba(5, 3, 2, 0.75) 100%);
 }
 
-/* 旧类名保留：改为纸质纹理感 */
+/* Legacy class name kept — parchment texture */
 .scanlines {
     position: fixed;
     inset: 0;
@@ -215,7 +215,7 @@ body {
     mix-blend-mode: multiply;
 }
 
-/* 顶栏：舰队司令部铭牌 */
+/* Top bar — admiralty nameplate */
 .top-hud-wrap {
     position: relative;
     z-index: 2;
@@ -428,7 +428,7 @@ body {
 .steam-manifold span:nth-child(3) { left: 60%; }
 .steam-manifold span:nth-child(4) { left: 84%; }
 
-/* 面板：橡木镶黄铜 */
+/* Panel — oak with brass trim */
 .control-panel,
 .workflow-section,
 .chart-card,
@@ -1035,7 +1035,7 @@ body {
     border-radius: var(--radius-sm);
     padding: 12px 14px 14px;
     min-height: 120px;
-    /* 不在此层创建独立滚动条，避免滚轮被子区域“吃掉”导致整页无法向下滚动 */
+    /* No nested scroll here — avoids wheel events trapping scroll */
     overflow: visible;
     box-shadow:
         inset 0 1px 0 rgba(255, 225, 160, 0.1),
@@ -1536,7 +1536,7 @@ body {
 }
 
     </style>
-    <!-- 顺序：Chart.js → Luxon → 时间适配器 → Financial（K 线）；须与 Chart.js 4 匹配 -->
+    <!-- Load order: Chart.js → Luxon → adapter → Financial (OHLC); must match Chart.js 4 -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1/dist/chartjs-adapter-luxon.umd.min.js"></script>
@@ -1558,147 +1558,147 @@ body {
     </div>
 
     <div class="container">
-        <!-- 标题 -->
+        <!-- Header -->
         <div class="header">
-            <div class="hero-badge">Est. 蒸汽纪 · 多智能体</div>
+            <div class="hero-badge">Est. Steam Age · Multi-Agent</div>
             <p class="header__kicker">Victorian steam &amp; admiralty exchange</p>
             <h1>NTCA Platform</h1>
-            <p class="header__lead">工场智械驱动的市场分析系统：先观行情图谱，再阅电报与舰桥报告。</p>
+            <p class="header__lead">A workshop-grade market analysis stack: chart first, then the telegraph log and bridge report.</p>
             <div class="header__rule" aria-hidden="true"></div>
         </div>
         <div class="steam-manifold" aria-hidden="true">
             <span></span><span></span><span></span><span></span>
         </div>
 
-        <!-- 控制面板 -->
+        <!-- Control panel -->
         <div class="control-panel">
-            <h2 class="panel-heading"><span class="panel-heading__glyph">◇</span>配置分析参数</h2>
+            <h2 class="panel-heading"><span class="panel-heading__glyph">◇</span>Analysis parameters</h2>
 
-            <!-- 分析师选择 -->
+            <!-- Analyst selection -->
             <div class="input-field">
-                <label>选择 AI 分析师</label>
+                <label>AI analyst</label>
             </div>
             <div class="analyst-cards" id="analystCards">
                 <div class="analyst-card selected" data-analyst="1" tabindex="0" role="button">
                     <div class="icon crest-badge" title="Old Money: JP Morgan"><span class="crest-top">House</span><span class="crest-monogram">JPM</span></div>
                     <div class="name">Patron · J.P. Morgan</div>
-                    <div class="description">DeepSeek 引擎 · 低成本高频分析</div>
+                    <div class="description">DeepSeek · low cost, high throughput</div>
                 </div>
                 <div class="analyst-card" data-analyst="2" tabindex="0" role="button">
                     <div class="icon crest-badge" title="Old Money: Rockefeller"><span class="crest-top">House</span><span class="crest-monogram">RKF</span></div>
                     <div class="name">Patron · Rockefeller</div>
-                    <div class="description">Kimi 引擎 · 长上下文中文分析</div>
+                    <div class="description">Kimi · long context for large documents</div>
                 </div>
                 <div class="analyst-card" data-analyst="3" tabindex="0" role="button">
                     <div class="icon crest-badge" title="Economist: John Maynard Keynes"><span class="crest-top">House</span><span class="crest-monogram">JMK</span></div>
                     <div class="name">Counsel · J.M. Keynes</div>
-                    <div class="description">Gemini 引擎 · 多模态研究推理</div>
+                    <div class="description">Gemini · multimodal research reasoning</div>
                 </div>
             </div>
-            <!-- 输入字段 -->
+            <!-- Inputs -->
             <div class="input-group">
                 <div class="input-field">
-                    <label>报告语言</label>
+                    <label>Report language</label>
                     <select id="reportLanguage">
-                        <option value="zh">中文</option>
-                        <option value="en">English</option>
+                        <option value="en" selected>English</option>
+                        <option value="zh">Chinese</option>
                     </select>
                 </div>
                 <div class="input-field">
-                    <label>市场类型</label>
+                    <label>Market</label>
                     <select id="marketType" onchange="updatePlaceholder()">
-                        <option value="us">美股 US</option>
-                        <option value="hk">港股 HK</option>
-                        <option value="cn">大A CN</option>
+                        <option value="us">US equities</option>
+                        <option value="hk">Hong Kong</option>
+                        <option value="cn">A-shares (CN)</option>
                     </select>
                 </div>
                 <div class="input-field">
-                    <label id="tickerLabel">股票代码</label>
+                    <label id="tickerLabel">Symbol</label>
                     <input type="text" id="ticker" placeholder="AAPL, TSLA, NVDA..." />
                 </div>
                 <div class="input-field">
-                    <label>开始日期</label>
+                    <label>Start date</label>
                     <input type="date" id="startDate" />
                 </div>
                 <div class="input-field">
-                    <label>结束日期</label>
+                    <label>End date</label>
                     <input type="date" id="endDate" />
                 </div>
                 <div class="input-field">
-                    <label>分析类型</label>
+                    <label>Analysis type</label>
                     <select id="analysisType">
-                        <option value="1">完整分析（推荐）</option>
-                        <option value="2">快速分析</option>
-                        <option value="3">情绪分析</option>
+                        <option value="1">Full analysis (recommended)</option>
+                        <option value="2">Quick analysis</option>
+                        <option value="3">Sentiment analysis</option>
                     </select>
                 </div>
             </div>
 
-            <!-- 开始按钮 -->
+            <!-- Start -->
             <button class="start-btn" id="startBtn" onclick="startAnalysis()">
-                开始分析
+                Run analysis
             </button>
         </div>
 
-        <!-- 工作流流程图 -->
+        <!-- Workflow -->
         <div class="workflow-section">
-            <h2 class="section-title">传动链 · AI 智能体工序</h2>
+            <h2 class="section-title">Agent chain · workflow</h2>
             <div class="workflow-diagram">
                 <div class="agent-node" id="agent-0">
                     <div class="icon crest-badge" title="Economist: Adam Smith"><span class="crest-top">House</span><span class="crest-monogram">AS</span></div>
                     <div class="name">Adam Smith</div>
                     <div class="epithet">Entbergen</div>
                     <div class="crest">House of Meridian</div>
-                    <div class="status">待命</div>
+                    <div class="status">Idle</div>
                 </div>
                 <div class="agent-node" id="agent-1">
                     <div class="icon crest-badge" title="Economist: David Ricardo"><span class="crest-top">House</span><span class="crest-monogram">DR</span></div>
                     <div class="name">David Ricardo</div>
                     <div class="epithet">Dasein Echo</div>
                     <div class="crest">House of Correspondence</div>
-                    <div class="status">待命</div>
+                    <div class="status">Idle</div>
                 </div>
                 <div class="agent-node" id="agent-2">
                     <div class="icon crest-badge" title="Economist: Joseph Schumpeter"><span class="crest-top">House</span><span class="crest-monogram">JS</span></div>
                     <div class="name">Joseph Schumpeter</div>
                     <div class="epithet">Geschick Wire</div>
                     <div class="crest">House of Dispatch</div>
-                    <div class="status">待命</div>
+                    <div class="status">Idle</div>
                 </div>
                 <div class="agent-node" id="agent-3">
                     <div class="icon crest-badge" title="Economist: Milton Friedman"><span class="crest-top">House</span><span class="crest-monogram">MF</span></div>
                     <div class="name">Milton Friedman</div>
                     <div class="epithet">Causa Forge</div>
                     <div class="crest">House of Ledger</div>
-                    <div class="status">待命</div>
+                    <div class="status">Idle</div>
                 </div>
                 <div class="agent-node" id="agent-4">
                     <div class="icon crest-badge" title="Economist: Friedrich Hayek"><span class="crest-top">House</span><span class="crest-monogram">FH</span></div>
                     <div class="name">Friedrich Hayek</div>
                     <div class="epithet">Poiesis Guild</div>
                     <div class="crest">House of Foundry</div>
-                    <div class="status">待命</div>
+                    <div class="status">Idle</div>
                 </div>
                 <div class="agent-node" id="agent-5">
                     <div class="icon crest-badge" title="Economist: Karl Marx"><span class="crest-top">House</span><span class="crest-monogram">KM</span></div>
                     <div class="name">Karl Marx</div>
                     <div class="epithet">Ge-stell Watch</div>
                     <div class="crest">House of Watchtower</div>
-                    <div class="status">待命</div>
+                    <div class="status">Idle</div>
                 </div>
                 <div class="agent-node" id="agent-6">
                     <div class="icon crest-badge" title="Economist: Eugene Fama"><span class="crest-top">House</span><span class="crest-monogram">EF</span></div>
                     <div class="name">Eugene Fama</div>
                     <div class="epithet">Bestand Engine</div>
                     <div class="crest">House of Traction</div>
-                    <div class="status">待命</div>
+                    <div class="status">Idle</div>
                 </div>
                 <div class="agent-node" id="agent-7">
                     <div class="icon crest-badge" title="Economist: John Hicks"><span class="crest-top">House</span><span class="crest-monogram">JH</span></div>
                     <div class="name">John Hicks</div>
                     <div class="epithet">Saving Turn</div>
                     <div class="crest">House of Helm</div>
-                    <div class="status">待命</div>
+                    <div class="status">Idle</div>
                 </div>
             </div>
             <div class="progress-bar">
@@ -1706,39 +1706,39 @@ body {
             </div>
         </div>
 
-        <!-- 图表区域 -->
+        <!-- Chart -->
         <div class="charts-grid">
             <div class="chart-card">
-                <h3 class="chart-title">K 线（OHLC）· 均线</h3>
+                <h3 class="chart-title">OHLC · moving averages</h3>
                 <div class="chart-frame">
                     <canvas id="priceChart"></canvas>
                 </div>
             </div>
-            <!-- 技术指标图表已隐藏 -->
+            <!-- Secondary indicator chart hidden -->
         </div>
 
-        <!-- 最终报告（图表下方）：左查询记录 · 中报告输出 · 右广播占位 -->
+        <!-- Report (below chart): query record · report · broadcast placeholder -->
         <div class="report-section report-section--report report-window" id="reportSection" style="display: none;">
-            <h2 class="section-title section-title--report" id="reportSectionTitle">分析报告 · 投资建议</h2>
+            <h2 class="section-title section-title--report" id="reportSectionTitle">Analysis report · investment view</h2>
             <div class="window-body">
                 <div class="report-dashboard-grid" id="reportClassicGrid">
                     <div class="report-subpanel report-subpanel--instrument">
-                        <h3 class="report-subpanel__title">查询记录<span class="report-subpanel__hint">本次单标的参数</span></h3>
+                        <h3 class="report-subpanel__title">Query record<span class="report-subpanel__hint">this run</span></h3>
                         <div class="report-content" id="queryRecordContent"></div>
                     </div>
                     <div class="report-subpanel report-subpanel--primary">
-                        <h3 class="report-subpanel__title">报告输出<span class="report-subpanel__hint">分析正文与结论</span></h3>
+                        <h3 class="report-subpanel__title">Report<span class="report-subpanel__hint">body &amp; conclusions</span></h3>
                         <div class="report-content" id="finalReportContent"></div>
                     </div>
                     <div class="report-subpanel report-subpanel--instrument">
-                        <h3 class="report-subpanel__title">数据流占位<span class="report-subpanel__hint">后台广播 / 原始流</span></h3>
+                        <h3 class="report-subpanel__title">Data stream<span class="report-subpanel__hint">backend / raw</span></h3>
                         <div class="report-content" id="broadcastPlaceholder"></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 终端输出 -->
+        <!-- Terminal -->
         <div class="terminal-wrap">
             <div class="terminal-chrome">
                 <div class="terminal-chrome__dots" aria-hidden="true"><span></span><span></span><span></span></div>
@@ -1746,7 +1746,7 @@ body {
                 <div class="terminal-chrome__badge">BRIDGE DECK</div>
             </div>
             <div class="terminal" id="terminal">
-                <div class="terminal-line is-info">> 系统就绪，等待输入分析指令...</div>
+                <div class="terminal-line is-info">> System ready — enter a symbol and run analysis.</div>
             </div>
         </div>
     </div>
@@ -1756,8 +1756,8 @@ body {
         let ws = null;
         let priceChart = null;
         let chartMode = 'candlestick';
-        let analysisOutput = []; // 存储分析输出（完整日志，用于左栏与回退解析）
-        /** 后端 SSE section 分流：与启发式解析二选一展示 */
+        let analysisOutput = []; // Full log for panels and fallback parsing
+        /** SSE section routing vs heuristic report split */
         let sseSectionBuffers = { analysis: [], advice: [] };
         let terminalTypingQueue = Promise.resolve();
         let activeTaskId = null;
@@ -1766,14 +1766,15 @@ body {
         let progressTicker = null;
         let reconnectAttempts = 0;
         const maxReconnectAttempts = 5;
-        const reconnectDelay = 3000; // 3秒
-        /** 页面关闭或停服时禁止 WS 重连、关闭 SSE，避免退出阶段报错或疯狂重连 */
+        const reconnectDelay = 3000;
+        /** On unload: stop WS reconnect and close SSE */
         let allowWsReconnect = true;
         let wsReconnectTimer = null;
         let activeAnalysisEventSource = null;
         let analysisFallbackPoller = null;
         let analysisFallbackPollCount = 0;
-        const analysisFallbackPollMax = 120; // 120 * 2s = 4分钟
+        const analysisFallbackPollIntervalMs = 6000;
+        const analysisFallbackPollMax = 200; // 200 * 6s ≈ 20 min (long LLM runs; quieter server logs than 2s)
 
         function shutdownLiveConnections() {
             allowWsReconnect = false;
@@ -1802,26 +1803,23 @@ body {
         window.addEventListener('beforeunload', shutdownLiveConnections);
         window.addEventListener('pagehide', shutdownLiveConnections);
 
-        // 存储K线数据（OHLC）
         let candlestickData = [];
-        // 统一时间轴：转成毫秒时间戳，兼容 financial + timeseries
+        // Normalize to ms timestamps for chart adapters
         function toChartTs(v) {
             if (typeof v === 'number' && Number.isFinite(v)) return v;
             const t = Date.parse(String(v));
             return Number.isFinite(t) ? t : null;
         }
-        // 存储指标数据
         let indicatorLines = {
             ma20: [],
             ma50: [],
             ma5: []
         };
-        /** true：已从 /api/chart-data 拉满序列，禁止再把子进程 OHLC 行追加到图上（避免重复画一遍、两段拼在一起） */
+        /** When true, full OHLC came from /api/chart-data; do not append subprocess OHLC lines */
         let chartLoadedFromApi = false;
-        /** true：分析正文只走 SSE，禁止 WebSocket 再写入 analysisOutput（避免双通道重复拼接） */
+        /** When true, report text comes from SSE only; skip WS duplication */
         let analysisProgressUsesSse = false;
 
-        // 建立WebSocket连接
         function connectWebSocket() {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             const wsUrl = `${protocol}//${window.location.host}/ws`;
@@ -1829,26 +1827,24 @@ body {
             ws = new WebSocket(wsUrl);
 
             ws.onopen = function() {
-                console.log('WebSocket 连接已建立');
-                reconnectAttempts = 0; // 重置重连计数
-                addTerminalLine('> 已连接到服务器', 'success');
+                console.log('WebSocket connected');
+                reconnectAttempts = 0;
+                addTerminalLine('> Connected to server', 'success');
             };
 
             ws.onmessage = function(event) {
                 try {
                     const message = JSON.parse(event.data);
-                    console.log('收到消息:', message);
+                    console.log('message:', message);
                     if (message.task_id && activeTaskId && message.task_id !== activeTaskId) {
-                        return; // 忽略其他任务的广播
+                        return;
                     }
 
                     if (message.type === 'progress') {
-                        // 处理进度更新
                         const data = message.data;
                         const text = data.text || '';
 
-                        // 分析正文由 SSE（listenToAIProgress）写入 analysisOutput；此处再 push 会与 SSE 重复一整遍
-                        // 图表：若已从 chart-data API 渲染完整序列，勿再解析子进程 OHLC 行追加，否则会出现「画完又接一段」
+                        // Report lines: SSE only when analysisProgressUsesSse. Chart: skip OHLC parse if API chart loaded.
                         if (!chartLoadedFromApi) {
                             const ohlcMatch = text.match(/^(\d{4}-\d{2}-\d{2}),([\d.]+),([\d.]+),([\d.]+),([\d.]+),/);
                             if (ohlcMatch) {
@@ -1894,7 +1890,6 @@ body {
                             }
                         }
 
-                        // 更新智能体状态
                         if (data.agent) {
                             const agentIndex = getAgentIndex(data.agent);
                             if (agentIndex >= 0) {
@@ -1902,79 +1897,121 @@ body {
                             }
                         }
                     } else if (message.type === 'complete') {
-                        addTerminalLine('> 分析完成', 'success');
+                        addTerminalLine('> Analysis complete', 'success');
                         stopProgressTicker(100);
-                        const btn = document.getElementById('startBtn');
-                        btn.disabled = false;
-                        btn.textContent = '开始分析';
-                        // 已启用 SSE 时由 listenToAIProgress 的 type===done 展示报告；此处再弹会抢在 SSE 收齐前或重复
-                        if (!analysisProgressUsesSse && !hasDisplayedResult) {
-                            hasDisplayedResult = true;
-                            displayRealAnalysisResult();
+                        if (analysisFallbackPoller) {
+                            clearInterval(analysisFallbackPoller);
+                            analysisFallbackPoller = null;
                         }
-                    } else if (message.type === 'error') {
-                        addTerminalLine(`> ✗ 错误: ${message.message}`, 'error');
-                        stopProgressTicker(0);
                         const btn = document.getElementById('startBtn');
                         btn.disabled = false;
-                        btn.textContent = '开始分析';
+                        btn.textContent = 'Run analysis';
+                        (async () => {
+                            if (hasDisplayedResult) {
+                                try {
+                                    if (activeAnalysisEventSource) {
+                                        activeAnalysisEventSource.close();
+                                        activeAnalysisEventSource = null;
+                                    }
+                                } catch (e) { /* ignore */ }
+                                return;
+                            }
+                            hasDisplayedResult = true;
+                            const tid = message.task_id || activeTaskId;
+                            if (tid) {
+                                try {
+                                    const rsResp = await fetch(`/api/task/${tid}/result`);
+                                    if (rsResp.ok) {
+                                        const rs = await rsResp.json();
+                                        if (rs && rs.text && String(rs.text).trim()) {
+                                            analysisOutput = [rs.text];
+                                        }
+                                    }
+                                } catch (e) { /* ignore */ }
+                            }
+                            if (!analysisOutput.length) {
+                                addTerminalLine('> No report text from server — see telegraph log', 'warning');
+                            }
+                            displayRealAnalysisResult();
+                            try {
+                                if (activeAnalysisEventSource) {
+                                    activeAnalysisEventSource.close();
+                                    activeAnalysisEventSource = null;
+                                }
+                            } catch (e) { /* ignore */ }
+                        })();
+                    } else if (message.type === 'error') {
+                        addTerminalLine(`> ✗ Error: ${message.message}`, 'error');
+                        stopProgressTicker(0);
+                        if (analysisFallbackPoller) {
+                            clearInterval(analysisFallbackPoller);
+                            analysisFallbackPoller = null;
+                        }
+                        const btn = document.getElementById('startBtn');
+                        btn.disabled = false;
+                        btn.textContent = 'Run analysis';
                     }
                 } catch (e) {
-                    console.error('解析消息失败:', e);
+                    console.error('Failed to parse message:', e);
                 }
             };
 
             ws.onerror = function(error) {
                 if (!allowWsReconnect) return;
-                console.error('WebSocket 错误:', error);
-                addTerminalLine('> WebSocket 连接错误', 'error');
+                console.error('WebSocket error:', error);
+                addTerminalLine('> WebSocket error', 'error');
             };
 
             ws.onclose = function() {
-                console.log('WebSocket 连接已关闭');
+                console.log('WebSocket closed');
                 if (!allowWsReconnect) return;
 
-                addTerminalLine('> 与服务器断开连接', 'info');
+                addTerminalLine('> Disconnected from server', 'info');
 
                 if (reconnectAttempts < maxReconnectAttempts) {
                     reconnectAttempts++;
-                    console.log(`尝试重新连接... (${reconnectAttempts}/${maxReconnectAttempts})`);
-                    addTerminalLine(`> 尝试重新连接... (${reconnectAttempts}/${maxReconnectAttempts})`, 'warning');
+                    console.log(`Reconnecting... (${reconnectAttempts}/${maxReconnectAttempts})`);
+                    addTerminalLine(`> Reconnecting... (${reconnectAttempts}/${maxReconnectAttempts})`, 'warning');
                     wsReconnectTimer = setTimeout(connectWebSocket, reconnectDelay);
                 } else {
-                    console.error('达到最大重连次数，停止重连');
-                    addTerminalLine('> 连接失败，请刷新页面重试', 'error');
+                    console.error('Max reconnect attempts reached');
+                    addTerminalLine('> Connection failed — refresh the page', 'error');
                 }
             };
         }
 
-        // 获取智能体索引
         function getAgentIndex(agentName) {
-            const agents = [
-                '市场分析师', '社交媒体分析师', '新闻分析师', '基本面分析师',
-                '牛市研究员', '熊市研究员', '交易员', '投资组合经理'
-            ];
-            return agents.indexOf(agentName);
+            if (!agentName) return -1;
+            const map = {
+                '市场分析师': 0, 'Market Analyst': 0,
+                '社交媒体分析师': 1, 'Social Analyst': 1,
+                '新闻分析师': 2, 'News Analyst': 2,
+                '基本面分析师': 3, 'Fundamentals Analyst': 3,
+                '牛市研究员': 4, 'Bull Researcher': 4,
+                '熊市研究员': 5, 'Bear Researcher': 5,
+                '交易员': 6, 'Trader': 6,
+                '投资组合经理': 7, 'Portfolio Manager': 7
+            };
+            if (map[agentName] != null) return map[agentName];
+            return -1;
         }
 
-        // 更新智能体状态
         function updateAgentStatus(index, status) {
             const agents = document.querySelectorAll('.agent-node');
             if (index >= 0 && index < agents.length) {
                 const progressFill = document.getElementById('progressFill');
                 if (status === 'active') {
                     agents[index].classList.add('active');
-                    agents[index].querySelector('.status').textContent = '工作中...';
+                    agents[index].querySelector('.status').textContent = 'Working...';
                     if (progressFill) {
                         const pct = Math.min(96, Math.round(((index + 1) / agents.length) * 100));
                         const current = parseFloat(progressFill.style.width || '0') || 0;
                         progressFill.style.width = Math.max(current, pct) + '%';
                     }
 
-                    // 3秒后标记为完成
                     setTimeout(() => {
                         agents[index].classList.remove('active');
-                        agents[index].querySelector('.status').textContent = '完成';
+                        agents[index].querySelector('.status').textContent = 'Done';
                     }, 3000);
                 }
             }
@@ -1999,7 +2036,7 @@ body {
             document.querySelectorAll('.agent-node').forEach(node => {
                 node.classList.remove('active', 'working');
                 const s = node.querySelector('.status');
-                if (s) s.textContent = '待命';
+                if (s) s.textContent = 'Idle';
             });
             const progressFill = document.getElementById('progressFill');
             if (progressFill) {
@@ -2037,7 +2074,7 @@ body {
             progressFill.classList.remove('running');
         }
 
-        /** 无 # 前缀、但整段即一篇「报告」时的首行标题，如：苹果公司(AAPL)社交媒体与新闻情绪分析报告 */
+        /** Plain-text first line that looks like a report title (no leading #) */
         function looksLikePlainReportTitle(line) {
             const t = String(line).trim();
             if (!t || t.length > 220) return false;
@@ -2045,7 +2082,10 @@ body {
             if (/分析报告|研究报告|情绪分析|新闻分析|基本面分析|研报|总结报告|投资报告|策略报告|技术报告|舆情报告|媒体分析/.test(t)) {
                 return true;
             }
-            if (/\([A-Za-z]{1,8}\)/.test(t) && /报告|分析|研判/.test(t) && t.length < 180) return true;
+            if (/analytics report|research report|sentiment analysis|equity report|investment report|technical analysis|market assessment|fundamental analysis/i.test(t)) {
+                return true;
+            }
+            if (/\([A-Za-z]{1,8}\)/.test(t) && (/报告|分析|研判/.test(t) || /\b(report|analysis|assessment)\b/i.test(t)) && t.length < 180) return true;
             return false;
         }
 
@@ -2067,7 +2107,9 @@ body {
 
         function extractMainReportDocument(text) {
             if (!text || text.length < 80) return '';
-            const noiseBlock = /\n(?:Human Message|Ai Message|Tool Message|={20,}|_{20,})\b/;
+            // LangChain pretty_print noise
+            const noiseBlock =
+                /\n={3,}[^\n]*\b(Human|Ai|AI|Tool|System)\s+Message\b[^\n]*|\n(?:Human Message|Ai Message|AI Message|Tool Message|System Message)\b|\n={20,}\s*\n|\n_{20,}\s*\n/;
             const cutAt = text.search(noiseBlock);
             const scoped = cutAt > 0 ? text.slice(0, cutAt) : text;
             const lines = scoped.split('\n');
@@ -2116,13 +2158,17 @@ body {
 
             function isNoiseLine(s) {
                 if (!s) return false;
-                if (/^(Human Message|Ai Message|Tool Message|Name:|Tool Calls:|Call ID:|Args:)\b/i.test(s)) return true;
+                if (/^(Human Message|Ai Message|AI Message|Tool Message|System Message|Name:|Tool Calls:|Call ID:|Args:)\b/i.test(s)) return true;
+                if (/=+/.test(s) && /\b(Human|Ai|AI|Tool|System)\s+Message\b/i.test(s)) return true;
                 if (/^={8,}$/.test(s)) return true;
+                if (/^\s*[a-z_][a-z0-9_]*\s*\([a-z0-9_:]+\)\s*$/i.test(s)) return true;
+                if (/^(symbol|start_date|end_date)\s*:\s*/i.test(s)) return true;
+                if (/^\[(Loading|OK|已确认|数据源|模式|分析|Confirmed|Source|Mode|Analysis)\]/i.test(s)) return true;
                 if (/^(Stock data for|# Total records:|# Data retrieved on:)/i.test(s)) return true;
                 if (/^Date,Open,High,Low,Close,Adj Close,volume$/i.test(s)) return true;
                 if (/^\d{4}-\d{2}-\d{2},/.test(s)) return true;
                 if (/RequestsDependencyWarning|RuntimeWarning:|openai\.APIConnectionError|httpx\.ConnectError|During task with name/i.test(s)) return true;
-                if (/^\[错误\]|\[ERROR\]/i.test(s)) return true;
+                if (/^\[(错误|ERROR)\]/i.test(s)) return true;
                 return false;
             }
 
@@ -2134,11 +2180,17 @@ body {
                 if (/^Traceback \(most recent call last\):/i.test(s)) { inTraceback = true; continue; }
 
                 if (inToolCallBlock) {
-                    if (/^={8,}$/.test(s) || /^Ai Message$/i.test(s)) inToolCallBlock = false;
+                    if (/^={8,}$/.test(s) || /^(Ai|AI|Human|Tool)\s+Message$/i.test(s) ||
+                        (/=+/.test(s) && /\b(Human|Ai|AI|Tool|System)\s+Message\b/i.test(s))) {
+                        inToolCallBlock = false;
+                    }
                     continue;
                 }
                 if (inTraceback) {
-                    if (/^={8,}$/.test(s) || /^Ai Message$/i.test(s)) inTraceback = false;
+                    if (/^={8,}$/.test(s) || /^(Ai|AI|Human|Tool)\s+Message$/i.test(s) ||
+                        (/=+/.test(s) && /\b(Human|Ai|AI|Tool|System)\s+Message\b/i.test(s))) {
+                        inTraceback = false;
+                    }
                     continue;
                 }
 
@@ -2148,8 +2200,7 @@ body {
 
             let cleaned = out.join('\n').replace(/\n{3,}/g, '\n\n').trim();
 
-            // 优先从“技术分析报告/分析报告”标题开始截取
-            const m = cleaned.match(/^#\s*.*(技术分析报告|分析报告|研究报告).*$/m);
+            const m = cleaned.match(/^#\s*.*(技术分析报告|分析报告|研究报告|Technical Analysis|Analysis Report|Research Report).*$/im);
             if (m && m.index != null && m.index > 0) {
                 cleaned = cleaned.slice(m.index).trim();
             }
@@ -2296,7 +2347,7 @@ body {
             if (splitIdx < 0) {
                 for (let i = 0; i < lines.length; i++) {
                     const tl = lines[i].trim();
-                    if (/^###\s+.*(风险管理|投资建议|操作建议|结论与建议|综合评估|风险提示)/.test(tl)) {
+                    if (/^###\s+.*(风险管理|投资建议|操作建议|结论与建议|综合评估|风险提示|Risk|Recommendation|Investment view|Conclusion)/i.test(tl)) {
                         splitIdx = i;
                         break;
                     }
@@ -2342,8 +2393,8 @@ body {
         }
 
         function renderMarkdownPanels(mdDoc, ctx) {
-            const emptyAnalysis = '<div class="agent-analysis"><p class="report-muted">暂无分析要点</p></div>';
-            const emptyAdvice = '<div class="agent-analysis"><p class="report-muted">暂无投资建议段落</p></div>';
+            const emptyAnalysis = '<div class="agent-analysis"><p class="report-muted">No analysis section parsed.</p></div>';
+            const emptyAdvice = '<div class="agent-analysis"><p class="report-muted">No recommendation section parsed.</p></div>';
 
             const meta = renderMetaBar(ctx || getReportContext());
             const bullets = extractSummaryBulletsFromMarkdown(mdDoc);
@@ -2411,9 +2462,9 @@ body {
             const start = (sEl && sEl.value) ? sEl.value : '';
             const end = (eEl && eEl.value) ? eEl.value : '';
             const mt = (mEl && mEl.value) ? mEl.value : 'us';
-            const lg = (lEl && lEl.value) ? lEl.value : 'zh';
-            const mk = { us: '美股', cn: '大A', hk: '港股' };
-            const langMap = { zh: '中文', en: 'English' };
+            const lg = (lEl && lEl.value) ? lEl.value : 'en';
+            const mk = { us: 'US', cn: 'A-shares (CN)', hk: 'Hong Kong' };
+            const langMap = { zh: 'Chinese', en: 'English' };
             return {
                 ticker: ticker || '—',
                 start: start || '—',
@@ -2428,31 +2479,38 @@ body {
             const atLabel = atEl && atEl.options[atEl.selectedIndex] ? atEl.options[atEl.selectedIndex].text : '—';
             const analystNames = { '1': 'DeepSeek', '2': 'Kimi', '3': 'Gemini' };
             const an = analystNames[selectedAnalyst] || selectedAnalyst;
-            const ts = new Date().toLocaleString('zh-CN', { hour12: false });
+            const ts = new Date().toLocaleString('en-US', { hour12: false });
             return '<div class="query-record">' +
-                '<div class="query-record__row"><span class="query-record__k">标的</span><span>' + escapeHtml(ctx.ticker) + '</span></div>' +
-                '<div class="query-record__row"><span class="query-record__k">市场</span><span>' + escapeHtml(ctx.market) + '</span></div>' +
-                '<div class="query-record__row"><span class="query-record__k">区间</span><span>' + escapeHtml(ctx.start) + ' → ' + escapeHtml(ctx.end) + '</span></div>' +
-                '<div class="query-record__row"><span class="query-record__k">语言</span><span>' + escapeHtml(ctx.language || '中文') + '</span></div>' +
-                '<div class="query-record__row"><span class="query-record__k">分析类型</span><span>' + escapeHtml(atLabel) + '</span></div>' +
-                '<div class="query-record__row"><span class="query-record__k">分析师</span><span>' + escapeHtml(String(an)) + '</span></div>' +
-                '<div class="query-record__row query-record__row--muted"><span class="query-record__k">完成时间</span><span>' + escapeHtml(ts) + '</span></div>' +
+                '<div class="query-record__row"><span class="query-record__k">Symbol</span><span>' + escapeHtml(ctx.ticker) + '</span></div>' +
+                '<div class="query-record__row"><span class="query-record__k">Market</span><span>' + escapeHtml(ctx.market) + '</span></div>' +
+                '<div class="query-record__row"><span class="query-record__k">Window</span><span>' + escapeHtml(ctx.start) + ' → ' + escapeHtml(ctx.end) + '</span></div>' +
+                '<div class="query-record__row"><span class="query-record__k">Language</span><span>' + escapeHtml(ctx.language || 'English') + '</span></div>' +
+                '<div class="query-record__row"><span class="query-record__k">Analysis type</span><span>' + escapeHtml(atLabel) + '</span></div>' +
+                '<div class="query-record__row"><span class="query-record__k">Analyst</span><span>' + escapeHtml(String(an)) + '</span></div>' +
+                '<div class="query-record__row query-record__row--muted"><span class="query-record__k">Completed</span><span>' + escapeHtml(ts) + '</span></div>' +
                 '</div>';
         }
 
         function renderBroadcastPlaceholderHtml() {
             return '<div class="report-broadcast-placeholder">' +
-                '<p>此处预留 <strong>后台广播 / 原始数据流</strong> 展示位（工具回包、进度流、调试输出等）。</p>' +
-                '<p class="report-muted" style="margin-top:10px;">当前为占位；单标的完整分析结论以中栏为准。</p>' +
+                '<p>Reserved for <strong>backend broadcast / raw stream</strong> (tool payloads, progress, debug).</p>' +
+                '<p class="report-muted" style="margin-top:10px;">Placeholder only — the center column holds the full report.</p>' +
                 '</div>';
         }
 
         function displayRealAnalysisResult() {
-            const fullOutput = analysisOutput.join('\n');
+            const rawJoin = analysisOutput.join('\n').trim();
+            let fullOutput = sanitizeReportDocument(rawJoin);
+            if (fullOutput.length < 80 && rawJoin.length > fullOutput.length + 100) {
+                fullOutput = rawJoin;
+            }
             const reportSection = document.getElementById('reportSection');
             let mainDoc = extractMainReportDocument(fullOutput);
             if (!mainDoc || mainDoc.length < 120) mainDoc = (fullOutput || '').trim();
             mainDoc = sanitizeReportDocument(mainDoc);
+            if (mainDoc.length < 80 && fullOutput.length > mainDoc.length + 50) {
+                mainDoc = fullOutput.trim();
+            }
             const ctx = getReportContext();
             const panels = mainDoc && mainDoc.length >= 120
                 ? renderMarkdownPanels(mainDoc, ctx)
@@ -2476,7 +2534,7 @@ body {
             if (bEl) bEl.innerHTML = renderBroadcastPlaceholderHtml();
 
             const st = document.getElementById('reportSectionTitle');
-            if (st) st.textContent = '分析报告 · 投资建议';
+            if (st) st.textContent = 'Analysis report · investment view';
 
             reportSection.style.display = 'block';
             requestAnimationFrame(() => {
@@ -2486,7 +2544,7 @@ body {
 
         function formatAgentLines(lines) {
             if (!lines || !lines.length) {
-                return '<div class="agent-body"><p class="report-muted">（本节无可用正文）</p></div>';
+                return '<div class="agent-body"><p class="report-muted">(No body text for this section.)</p></div>';
             }
             const parts = [];
             let listBuf = [];
@@ -2516,7 +2574,7 @@ body {
         }
 
         function prettyAgentTitle(title) {
-            const t = String(title || '分析输出');
+            const t = String(title || 'Output');
             const esc = escapeHtml(t);
             if (t.length <= 56) return esc;
             return '<span title="' + esc + '">' + escapeHtml(t.slice(0, 54)) + '…</span>';
@@ -2536,7 +2594,7 @@ body {
             for (let i = 0; i < blocks.length; i++) {
                 const b = blocks[i];
                 if (b.type === 'recommendation') {
-                    add('结论要点：' + b.line);
+                    add('Takeaway: ' + b.line);
                     continue;
                 }
                 if (b.type === 'agent' && b.lines && b.lines.length) {
@@ -2566,18 +2624,18 @@ body {
             if (!bullets || !bullets.length) return '';
             const items = bullets.map(b => '<li>' + escapeHtml(b) + '</li>').join('');
             return '<div class="report-summary-card">' +
-                '<div class="report-summary-card__title">要点摘要</div>' +
+                '<div class="report-summary-card__title">Highlights</div>' +
                 '<ul class="report-summary-list">' + items + '</ul>' +
                 '</div>';
         }
 
         function renderAdviceDisclaimer() {
-            return '<p class="report-disclaimer">仅供教学与分析练习，不构成投资建议。请以终端日志中的数据与约束为准。</p>';
+            return '<p class="report-disclaimer">For education and analysis practice only — not investment advice. Rely on the telegraph log for data limits and caveats.</p>';
         }
 
         function renderRecommendationHtml(line) {
             return '<div class="agent-analysis recommendation-card">' +
-                '<div class="recommendation-card__label">投资建议</div>' +
+                '<div class="recommendation-card__label">Investment view</div>' +
                 '<div class="recommendation-card__text">' + escapeHtml(line) + '</div>' +
                 '</div>';
         }
@@ -2599,12 +2657,14 @@ body {
         }
 
         function renderReportPanelsFromSections(fullText, analysisText, adviceText, ctx) {
-            const emptyAll = '<div class="agent-analysis"><p class="report-muted">暂无可展示的真实分析数据</p></div>';
-            const emptyAnalysis = '<div class="agent-analysis"><p class="report-muted">暂无分析要点</p></div>';
-            const emptyAdvice = '<div class="agent-analysis"><p class="report-muted">暂无投资建议段落</p></div>';
+            const emptyAll = '<div class="agent-analysis"><p class="report-muted">No report content to display.</p></div>';
+            const emptyAnalysis = '<div class="agent-analysis"><p class="report-muted">No analysis section parsed.</p></div>';
+            const emptyAdvice = '<div class="agent-analysis"><p class="report-muted">No recommendation section parsed.</p></div>';
 
             const parsedFull = parseReportBlocks(fullText || '');
             if (parsedFull.short || !(parsedFull.blocks || []).length) {
+                const fb = buildMarkdownOnlyPanels(fullText || '', ctx);
+                if (fb) return fb;
                 return { final: emptyAll, analysis: emptyAll, advice: emptyAll };
             }
             const blocks = parsedFull.blocks;
@@ -2614,7 +2674,7 @@ body {
             const bodyFull = htmlFromReportBlocks(blocks);
             let final = meta + summary + '<div class="report-body-stack">' + bodyFull + '</div>';
             if (!bodyFull.trim()) {
-                final = meta + summary + '<div class="report-body-stack"><p class="report-muted">未能从流式输出中解析出分段正文，请向下查看电报日志中的原始行。</p></div>';
+                final = meta + summary + '<div class="report-body-stack"><p class="report-muted">Could not split streaming output into sections — see the telegraph log below for raw lines.</p></div>';
             }
 
             const pa = parseReportBlocks(analysisText || '');
@@ -2679,7 +2739,7 @@ body {
 
             function flushAgent() {
                 if (currentLines.length > 0 || currentAgent) {
-                    const title = currentAgent || '分析输出';
+                    const title = currentAgent || 'Output';
                     if (currentLines.length > 0) {
                         blocks.push({
                             type: 'agent',
@@ -2714,18 +2774,33 @@ body {
             return { blocks, short: false };
         }
 
+        function buildMarkdownOnlyPanels(rawText, ctx) {
+            const raw = (rawText || '').trim();
+            if (raw.length < 120) return null;
+            const rctx = ctx || getReportContext();
+            const meta = renderMetaBar(rctx);
+            const bodyHtml = markdownToHtmlSimple(raw);
+            const emptyAdvice = '<div class="agent-analysis"><p class="report-muted">No recommendation section parsed.</p></div>';
+            const final = meta + '<div class="report-body-stack">' + bodyHtml + '</div>';
+            return { final, analysis: final, advice: emptyAdvice };
+        }
+
         function renderReportPanels(parsed, rawOutput, ctx) {
-            const emptyAll = '<div class="agent-analysis"><p class="report-muted">暂无可展示的真实分析数据</p></div>';
-            const emptyAnalysis = '<div class="agent-analysis"><p class="report-muted">暂无分析要点</p></div>';
-            const emptyAdvice = '<div class="agent-analysis"><p class="report-muted">暂无投资建议段落</p></div>';
-            const emptyResult = '<div class="agent-analysis"><p class="report-muted">暂无有效的真实分析结果</p></div>';
+            const emptyAll = '<div class="agent-analysis"><p class="report-muted">No report content to display.</p></div>';
+            const emptyAnalysis = '<div class="agent-analysis"><p class="report-muted">No analysis section parsed.</p></div>';
+            const emptyAdvice = '<div class="agent-analysis"><p class="report-muted">No recommendation section parsed.</p></div>';
+            const emptyResult = '<div class="agent-analysis"><p class="report-muted">No valid analysis result to show.</p></div>';
 
             if (parsed.short) {
+                const fb = buildMarkdownOnlyPanels(rawOutput, ctx);
+                if (fb) return fb;
                 return { final: emptyAll, analysis: emptyAll, advice: emptyAll };
             }
 
             const blocks = parsed.blocks || [];
             if (!blocks.length) {
+                const fb = buildMarkdownOnlyPanels(rawOutput, ctx);
+                if (fb) return fb;
                 return { final: emptyAll, analysis: emptyAll, advice: emptyAll };
             }
 
@@ -2780,7 +2855,7 @@ body {
             }
 
             if (!bodyFinal.trim()) {
-                final = meta + summary + '<div class="report-body-stack"><p class="report-muted">未能从流式输出中解析出分段正文，请向下查看电报日志中的原始行。</p></div>';
+                final = meta + summary + '<div class="report-body-stack"><p class="report-muted">Could not split streaming output into sections — see the telegraph log below for raw lines.</p></div>';
             }
 
             if (!analysis) analysis = emptyAnalysis;
@@ -2789,7 +2864,7 @@ body {
             return { final, analysis, advice };
         }
 
-        // 初始化图表（OHLC K 线 + MA，chartjs-chart-financial + timeseries）
+        // Charts: OHLC + MAs
         function initCharts() {
             const priceCtx = document.getElementById('priceChart').getContext('2d');
 
@@ -2822,10 +2897,10 @@ body {
                         displayColors: true,
                         callbacks: {
                             label: function(context) {
-                                if (context.dataset.type === 'candlestick' || context.dataset.label === 'K线') {
+                                if (context.dataset.type === 'candlestick' || context.dataset.label === 'Candles' || context.dataset.label === 'K线') {
                                     const raw = context.raw;
                                     if (raw && typeof raw.o === 'number') {
-                                        return `开:${raw.o.toFixed(2)} 高:${raw.h.toFixed(2)} 低:${raw.l.toFixed(2)} 收:${raw.c.toFixed(2)}`;
+                                        return `O:${raw.o.toFixed(2)} H:${raw.h.toFixed(2)} L:${raw.l.toFixed(2)} C:${raw.c.toFixed(2)}`;
                                     }
                                 }
                                 const y = context?.parsed?.y;
@@ -2875,7 +2950,7 @@ body {
                     datasets: [
                         {
                             type: 'line',
-                            label: '收盘价',
+                            label: 'Close',
                             data: [],
                             borderColor: '#d4af37',
                             backgroundColor: 'transparent',
@@ -2927,7 +3002,7 @@ body {
             });
         }
 
-        // 更新图表（K 线数据为 {x, o, h, l, c}；均线为 {x, y}）
+        // updateChart: candle rows {x,o,h,l,c}; MAs as {x,y}
         function updateChart() {
             if (!priceChart) return false;
 
@@ -2958,7 +3033,7 @@ body {
             return true;
         }
 
-        // 分析师选择（点击 / 键盘）
+        // Analyst cards
         function selectAnalystCard(card) {
             document.querySelectorAll('.analyst-card').forEach(c => c.classList.remove('selected'));
             card.classList.add('selected');
@@ -2974,13 +3049,12 @@ body {
             });
         });
 
-        // 设置默认日期
+        // Default date range
         const today = new Date().toISOString().split('T')[0];
         const threeMonthsAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
         document.getElementById('endDate').value = today;
         document.getElementById('startDate').value = threeMonthsAgo;
 
-        // 更新市场类型占位符
         function updatePlaceholder() {
             const marketType = document.getElementById('marketType').value;
             const tickerInput = document.getElementById('ticker');
@@ -2988,19 +3062,19 @@ body {
 
             const placeholders = {
                 'us': {
-                    label: '股票代码',
+                    label: 'Symbol',
                     placeholder: 'AAPL, TSLA, NVDA, MSFT...',
-                    examples: '常用代码: AAPL(苹果), TSLA(特斯拉), NVDA(英伟达)'
+                    examples: 'Examples: AAPL, TSLA, NVDA'
                 },
                 'cn': {
-                    label: '大A代码',
-                    placeholder: '300308, 002475, 688256 或中文名',
-                    examples: '例: 中际旭创、立讯精密、寒武纪 或六位数代码'
+                    label: 'A-share symbol',
+                    placeholder: '300308, 002475, 688256 or name',
+                    examples: 'Six-digit codes or Chinese name'
                 },
                 'hk': {
-                    label: '港股代码',
-                    placeholder: '0700.HK, 9988.HK 或 腾讯 / 阿里',
-                    examples: '例: 0700.HK(腾讯), 9988.HK(阿里)'
+                    label: 'HK symbol',
+                    placeholder: '0700.HK, 9988.HK, etc.',
+                    examples: 'Examples: 0700.HK, 9988.HK'
                 }
             };
 
@@ -3009,24 +3083,23 @@ body {
             tickerInput.placeholder = config.placeholder;
         }
 
-        // 初始化市场类型
         updatePlaceholder();
 
-        // 开始分析（优化版：先画图后报告）
+        // Run analysis (chart first, then report)
         async function startAnalysis() {
             const ticker = document.getElementById('ticker').value.trim();
             const startDateStr = document.getElementById('startDate').value;
             const endDateStr = document.getElementById('endDate').value;
             const analysisType = document.getElementById('analysisType').value;
             const marketType = document.getElementById('marketType').value;
-            const reportLanguage = document.getElementById('reportLanguage').value || 'zh';
+            const reportLanguage = document.getElementById('reportLanguage').value || 'en';
 
             if (!ticker) {
-                alert('请输入股票代码');
+                alert('Enter a symbol');
                 return;
             }
 
-            // 重置数据
+            // Reset state
             candlestickData = [];
             indicatorLines = {
                 ma5: [],
@@ -3041,7 +3114,7 @@ body {
             activeTaskId = null;
             resetWorkflowUI();
 
-            // 清空图表
+            // Clear chart
             if (priceChart) {
                 priceChart.data.datasets.forEach(dataset => {
                     dataset.data = [];
@@ -3049,12 +3122,11 @@ body {
                 priceChart.update();
             }
 
-            // 禁用按钮
             const btn = document.getElementById('startBtn');
             btn.disabled = true;
-            btn.textContent = '分析中...';
+            btn.textContent = 'Running...';
 
-            // 清空终端
+            // Clear terminal
             const terminal = document.getElementById('terminal');
             if (terminal) {
                 terminal.innerHTML = '';
@@ -3065,14 +3137,13 @@ body {
                 progressFill.classList.add('running');
             }
             startProgressTicker();
-            addTerminalLine(`> 开始分析 ${ticker}...`, 'info');
-            const _mt = { us: '美股', hk: '港股', cn: '大A' };
-            addTerminalLine(`> 市场类型: ${_mt[marketType] || marketType}`, 'info');
-            addTerminalLine(`> 正在获取图表数据...`, 'info');
+            addTerminalLine(`> Starting analysis: ${ticker}...`, 'info');
+            const _mt = { us: 'US', hk: 'Hong Kong', cn: 'A-shares (CN)' };
+            addTerminalLine(`> Market: ${_mt[marketType] || marketType}`, 'info');
+            addTerminalLine(`> Fetching chart data...`, 'info');
 
             try {
-                // ===== 步骤1：先启动AI分析，确保报告流程不被图表阻断 =====
-                addTerminalLine(`> 正在启动AI分析任务...`, 'info');
+                addTerminalLine(`> Starting AI task...`, 'info');
                 const analyzeResponse = await fetch('/api/analyze', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -3092,13 +3163,13 @@ body {
                     const taskId = analyzeResult.task_id;
                     activeTaskId = taskId;
 
-                    addTerminalLine(`> AI分析任务已启动 (ID: ${taskId.substring(0, 8)}...)`, 'success');
+                    addTerminalLine(`> AI task started (ID: ${taskId.substring(0, 8)}...)`, 'success');
                     listenToAIProgress(taskId, btn);
                 } else {
-                    throw new Error('AI分析启动失败');
+                    throw new Error('Failed to start AI analysis');
                 }
 
-                // ===== 步骤2：请求图表数据（失败也不影响报告继续） =====
+                // Chart request (non-blocking for report)
                 const chartResponse = await fetch('/api/chart-data', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -3116,25 +3187,25 @@ body {
                         const ds = chartResult.data && (chartResult.data.data_source || '');
                         const nm = chartResult.data && (chartResult.data.ntca_mode || '');
                         const pf = chartResult.data && (chartResult.data.platform || '');
-                        addTerminalLine(`> 图表就绪 ${pf ? '[' + pf + '] ' : ''}来源: ${ds || '—'} 模式: ${nm || '—'}`, 'success');
-                        addTerminalLine(`> 正在渲染K线图...`, 'info');
+                        addTerminalLine(`> Chart ready ${pf ? '[' + pf + '] ' : ''}source: ${ds || '—'} mode: ${nm || '—'}`, 'success');
+                        addTerminalLine(`> Rendering price chart...`, 'info');
                         const rendered = renderChartFromAPI(chartResult.data);
                         if (rendered) {
-                            addTerminalLine(`> K线图已显示，您可以研究历史数据`, 'success');
+                            addTerminalLine(`> Price chart updated`, 'success');
                         } else {
-                            addTerminalLine(`> K线图渲染失败，请检查指标数据`, 'warning');
+                            addTerminalLine(`> Chart render failed — check indicator data`, 'warning');
                         }
                     } else {
-                        addTerminalLine(`> 图表数据获取失败: ${chartResult.message}`, 'warning');
+                        addTerminalLine(`> Chart data error: ${chartResult.message}`, 'warning');
                     }
                 } else {
-                    addTerminalLine(`> 图表API调用失败`, 'warning');
+                    addTerminalLine(`> Chart API request failed`, 'warning');
                 }
 
             } catch (error) {
-                addTerminalLine(`> 错误: ${error.message}`, 'error');
+                addTerminalLine(`> Error: ${error.message}`, 'error');
                 btn.disabled = false;
-                btn.textContent = '开始分析';
+                btn.textContent = 'Run analysis';
                 const progressFill = document.getElementById('progressFill');
                 if (progressFill) {
                     stopProgressTicker(0);
@@ -3142,12 +3213,11 @@ body {
             }
         }
 
-        // 渲染图表（从API数据）
         function renderChartFromAPI(chartData) {
             try {
                 const {ohlcv, indicators, summary} = chartData.data;
 
-                // 1. 转换K线数据
+                // OHLC rows
                 candlestickData = ohlcv.date.map((date, i) => ({
                     x: toChartTs(date),
                     o: ohlcv.open[i],
@@ -3156,7 +3226,7 @@ body {
                     c: ohlcv.close[i]
                 })).filter(d => d.x !== null);
 
-                // 2. 转换指标数据（过滤 null/NaN，映射为 {x,y}）
+                // Indicators → {x,y}
                 const toLine = (arr) => {
                     if (!Array.isArray(arr)) return [];
                     const out = [];
@@ -3175,28 +3245,25 @@ body {
 
                 chartLoadedFromApi = true;
 
-                // 3. 更新图表
                 updateChart();
 
-                // 4. 显示摘要信息
-                addTerminalLine(`> 当前价格: $${summary.current}`, 'info');
-                addTerminalLine(`> 涨跌: ${summary.change >= 0 ? '+' : ''}${summary.change} (${summary.change_pct}%)`, 'info');
+                addTerminalLine(`> Last: $${summary.current}`, 'info');
+                addTerminalLine(`> Change: ${summary.change >= 0 ? '+' : ''}${summary.change} (${summary.change_pct}%)`, 'info');
                 return true;
 
             } catch (error) {
-                console.error('图表渲染错误:', error);
-                addTerminalLine(`> 图表渲染失败: ${error.message}`, 'warning');
+                console.error('Chart render error:', error);
+                addTerminalLine(`> Chart render failed: ${error.message}`, 'warning');
                 return false;
             }
         }
 
-        // 监听AI进度（SSE）
         function listenToAIProgress(taskId, btn) {
             analysisProgressUsesSse = true;
             const eventSource = new EventSource(`/api/task/${taskId}/progress`);
             activeAnalysisEventSource = eventSource;
 
-            // SSE 兜底：定时轮询任务状态并在完成后拉取最终文本
+            // Fallback poller: task status + final text
             if (analysisFallbackPoller) {
                 clearInterval(analysisFallbackPoller);
                 analysisFallbackPoller = null;
@@ -3212,35 +3279,38 @@ body {
                         clearInterval(analysisFallbackPoller);
                         analysisFallbackPoller = null;
                         if (st.status === 'completed' && !hasDisplayedResult) {
-                            const rsResp = await fetch(`/api/task/${taskId}/result`);
-                            if (rsResp.ok) {
-                                const rs = await rsResp.json();
-                                if (rs && rs.text) analysisOutput.push(rs.text);
-                            }
                             hasDisplayedResult = true;
+                            try {
+                                const rsResp = await fetch(`/api/task/${taskId}/result`);
+                                if (rsResp.ok) {
+                                    const rs = await rsResp.json();
+                                    if (rs && rs.text && String(rs.text).trim()) {
+                                        analysisOutput = [rs.text];
+                                    }
+                                }
+                            } catch (e) { /* ignore */ }
                             displayRealAnalysisResult();
                             stopProgressTicker(100);
                         }
                         btn.disabled = false;
-                        btn.textContent = '开始分析';
+                        btn.textContent = 'Run analysis';
                         return;
                     }
 
-                    // 防止无限轮询：超过阈值则停止轮询并提示用户重试
                     if (analysisFallbackPollCount >= analysisFallbackPollMax) {
                         clearInterval(analysisFallbackPoller);
                         analysisFallbackPoller = null;
                         try { eventSource.close(); } catch (e) { /* ignore */ }
                         if (activeAnalysisEventSource === eventSource) activeAnalysisEventSource = null;
-                        addTerminalLine('> 分析等待超时（超过4分钟），请重试或切换模型', 'warning');
+                        addTerminalLine('> Analysis timed out (>20 min) — retry or switch model', 'warning');
                         stopProgressTicker();
                         btn.disabled = false;
-                        btn.textContent = '开始分析';
+                        btn.textContent = 'Run analysis';
                     }
                 } catch (e) {
                     // ignore fallback poll errors
                 }
-            }, 2000);
+            }, analysisFallbackPollIntervalMs);
 
             eventSource.onmessage = (event) => {
                 try {
@@ -3251,27 +3321,48 @@ body {
                             clearInterval(analysisFallbackPoller);
                             analysisFallbackPoller = null;
                         }
-                        addTerminalLine('> 分析完成', 'success');
+                        addTerminalLine('> Analysis complete', 'success');
                         stopProgressTicker(100);
-                        if (!hasDisplayedResult) {
+                        (async () => {
+                            if (hasDisplayedResult) {
+                                try {
+                                    eventSource.close();
+                                } catch (e) { /* ignore */ }
+                                if (activeAnalysisEventSource === eventSource) activeAnalysisEventSource = null;
+                                btn.disabled = false;
+                                btn.textContent = 'Run analysis';
+                                return;
+                            }
                             hasDisplayedResult = true;
+                            if (!analysisOutput.length && data.status === 'completed') {
+                                try {
+                                    const rsResp = await fetch(`/api/task/${taskId}/result`);
+                                    if (rsResp.ok) {
+                                        const rs = await rsResp.json();
+                                        if (rs && rs.text && String(rs.text).trim()) {
+                                            analysisOutput = [rs.text];
+                                        }
+                                    }
+                                } catch (e) { /* ignore */ }
+                            }
                             displayRealAnalysisResult();
-                        }
-                        eventSource.close();
-                        if (activeAnalysisEventSource === eventSource) activeAnalysisEventSource = null;
-                        btn.disabled = false;
-                        btn.textContent = '开始分析';
+                            try {
+                                eventSource.close();
+                            } catch (e) { /* ignore */ }
+                            if (activeAnalysisEventSource === eventSource) activeAnalysisEventSource = null;
+                            btn.disabled = false;
+                            btn.textContent = 'Run analysis';
+                        })();
                         return;
                     }
 
                     if (data.report_only || data.stage === 'complete_output') {
                         if (data.text) {
-                            analysisOutput.push(data.text);
+                            analysisOutput = [data.text];
                         }
                         return;
                     }
 
-                    // 更新智能体状态
                     if (data.agent) {
                         const agentIndex = getAgentIndex(data.agent);
                         if (agentIndex >= 0) {
@@ -3295,7 +3386,7 @@ body {
                     }
 
                 } catch (e) {
-                    console.error('SSE数据解析错误:', e);
+                    console.error('SSE parse error:', e);
                 }
             };
 
@@ -3305,9 +3396,9 @@ body {
                     if (activeAnalysisEventSource === eventSource) activeAnalysisEventSource = null;
                     return;
                 }
-                console.error('SSE连接错误:', error);
-                addTerminalLine('> SSE连接断开', 'warning');
-                // 保留 fallback poller 继续工作，不立刻中断整条流程
+                console.error('SSE error:', error);
+                addTerminalLine('> SSE disconnected', 'warning');
+                // Fallback poller may still complete the task
                 eventSource.close();
                 if (activeAnalysisEventSource === eventSource) activeAnalysisEventSource = null;
                 if (!hasDisplayedResult && analysisOutput.length > 0) {
@@ -3317,7 +3408,6 @@ body {
             };
         }
 
-        // 高亮智能体
         function highlightAgent(agentName) {
             const idx = getAgentIndex(agentName);
             const agents = document.querySelectorAll('.agent-node');
@@ -3327,7 +3417,6 @@ body {
             }
         }
 
-        // 显示进度条动画
         function showProgressBarAnimation() {
             const progressFill = document.getElementById('progressFill');
             let progress = 0;
@@ -3343,17 +3432,14 @@ body {
             }, 1000);
         }
 
-        // 已弃用：保留函数壳，避免历史调用报错
         function simulateWorkflow() {
-            addTerminalLine('> 已禁用模拟流程：仅允许真实数据源（WRDS/AKShare）', 'warning');
+            addTerminalLine('> Demo workflow disabled — real data sources only (WRDS / AKShare)', 'warning');
         }
 
-        // 已弃用：禁止生成任何模拟报告
         function completeAnalysis() {
-            addTerminalLine('> 已禁用模拟完成逻辑：仅展示真实分析结果', 'warning');
+            addTerminalLine('> Simulated completion disabled — only real results are shown', 'warning');
         }
 
-        // 激活智能体节点
         function activateAgent(index) {
             const agents = document.querySelectorAll('.agent-node');
             if (index < agents.length) {
@@ -3361,7 +3447,6 @@ body {
             }
         }
 
-        // 添加终端行
         function addTerminalLine(text, type = 'info') {
             const terminal = document.getElementById('terminal');
             const line = document.createElement('div');
@@ -3401,13 +3486,11 @@ body {
             });
         }
 
-        // 初始化
         window.onload = function() {
             initCharts();
-            addTerminalLine('> 系统已就绪', 'success');
-            addTerminalLine('> 等待用户输入...', 'info');
+            addTerminalLine('> System ready', 'success');
+            addTerminalLine('> Waiting for input...', 'info');
 
-            // 建立WebSocket连接
             connectWebSocket();
         };
     </script>

@@ -5,8 +5,28 @@ from tradingagents.agents.utils.agent_utils import (
     get_indicators,
     get_language_instruction,
     get_stock_data,
+    is_homework_simple_mode,
 )
 from tradingagents.dataflows.config import get_config
+
+
+def _homework_market_analyst_addon() -> str:
+    if not is_homework_simple_mode():
+        return ""
+    lang = (get_config().get("output_language") or "English").strip().lower()
+    if lang in ("chinese", "中文", "zh", "zh-cn", "cn", "mandarin"):
+        return (
+            "\n\n【作业要求·技术】在 get_stock_data 之后，必须用 get_indicators 至少请求并解读 **布林带**："
+            "同时包含 `boll`（中轨）、`boll_ub`（上轨）、`boll_lb`（下轨）。"
+            "报告中须结合返回数值说明超买/超卖或贴轨运行（仅使用工具输出，禁止编造）。"
+            "可另选少量互补指标（如均线或 RSI），但不要挤掉布林带。篇幅适中，文末保留一个精简 Markdown 表格。"
+        )
+    return (
+        "\n\n**Coursework (technical):** After `get_stock_data`, you **must** call `get_indicators` for **Bollinger Bands**: "
+        "include `boll`, `boll_ub`, and `boll_lb` together. Explain overbought/oversold or band-touch context using **only** "
+        "returned values. You may add a few complementary indicators (e.g. MA or RSI) but do not omit Bollinger. "
+        "Moderate length; keep one concise Markdown table at the end."
+    )
 
 
 def create_market_analyst(llm):
@@ -46,6 +66,7 @@ Volume-Based Indicators:
 - vwma: VWMA: A moving average weighted by volume. Usage: Confirm trends by integrating price action with volume data. Tips: Watch for skewed results from volume spikes; use in combination with other volume analyses.
 
 - Select indicators that provide diverse and complementary information. Avoid redundancy (e.g., do not select both rsi and stochrsi). Also briefly explain why they are suitable for the given market context. When you tool call, please use the exact name of the indicators provided above as they are defined parameters, otherwise your call will fail. Please make sure to call get_stock_data first to retrieve the CSV that is needed to generate indicators. Then use get_indicators with the specific indicator names. Write a very detailed and nuanced report of the trends you observe. Provide specific, actionable insights with supporting evidence to help traders make informed decisions."""
+            + _homework_market_analyst_addon()
             + """ Make sure to append a Markdown table at the end of the report to organize key points in the report, organized and easy to read."""
             + get_data_grounding_instruction()
             + get_language_instruction()

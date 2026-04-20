@@ -5,6 +5,7 @@ ACCE v2.0 - Web 后端服务器
 
 import os
 import sys
+
 import json
 import math
 import queue
@@ -16,12 +17,17 @@ import re
 from datetime import datetime
 
 from tradingagents.utils.credentials import load_llm_api_keys, load_wrds_credentials
-from flask import Flask, render_template, request, jsonify, Response
+from flask import Flask, render_template, request, jsonify, Response, stream_with_context
 from flask_cors import CORS
 from flask_sock import Sock
 
-# 必须用脚本所在目录定位 templates/static（避免从别的 cwd 启动时找不到样式）
-_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# Resolve repo root: running `python tradingagents/web_backend.py` uses parent for templates + run_analysis_web.py
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+_BASE_DIR = (
+    _SCRIPT_DIR
+    if os.path.isfile(os.path.join(_SCRIPT_DIR, "run_analysis_web.py"))
+    else os.path.abspath(os.path.join(_SCRIPT_DIR, ".."))
+)
 app = Flask(
     __name__,
     template_folder=os.path.join(_BASE_DIR, "templates"),
@@ -87,8 +93,8 @@ def _terminate_analysis_children():
 
 atexit.register(_terminate_analysis_children)
 
-# 工作目录与 Python 解释器（随项目与运行环境自动确定）
-WORK_DIR = os.path.dirname(os.path.abspath(__file__))
+# Working directory for subprocess (same as repo root above)
+WORK_DIR = _BASE_DIR
 PYTHON_PATH = sys.executable
 
 
@@ -101,27 +107,30 @@ class OutputCapture:
 
     def add_client(self, client):
         self.clients.append(client)
-        print(f"[WebSocket] 客户端已连接，当前客户端数: {len(self.clients)}")
+        print(f"[WebSocket] client connected; count={len(self.clients)}")
 
     def remove_client(self, client):
         if client in self.clients:
             self.clients.remove(client)
-            print(f"[WebSocket] 客户端已断开，当前客户端数: {len(self.clients)}")
+            print(f"[WebSocket] client disconnected; count={len(self.clients)}")
 
     def broadcast(self, message):
         """广播消息到所有客户端"""
         if not self.clients:
-            print(f"[WebSocket] 警告: 没有连接的客户端，消息未发送")
+            # 分析完成/进度以 SSE 为主；无 WS 时不刷屏（避免误以为任务失败）
+            mtype = message.get("type", "unknown")
+            if mtype not in ("complete", "progress"):
+                print(f"[WebSocket] warning: no clients; message not sent ({mtype})")
             return
 
         mtype = message.get("type", "unknown")
         if mtype != "progress":
-            print(f"[WebSocket] 广播消息到 {len(self.clients)} 个客户端: {mtype}")
+            print(f"[WebSocket] broadcast to {len(self.clients)} client(s): {mtype}")
         for client in self.clients[:]:
             try:
                 client.send(json.dumps(message))
             except Exception as e:
-                print(f"[WebSocket] 发送消息失败: {e}")
+                print(f"[WebSocket] send failed: {e}")
                 self.remove_client(client)
 
 
@@ -179,7 +188,12 @@ def _sse_section_for_line(stage, agent_on_line, last_agent, raw_text):
         r"^((强烈)?(买入|卖出|持有)|(Buy|Sell|Hold|Overweight|Underweight)\b)", rt, re.I
     ):
         return "advice"
-    if re.search(r"(最终评级|投资意见|目标价|止损|止盈)", rt):
+    if re.search(
+        r"(最终评级|投资意见|目标价|止损|止盈|"
+        r"final rating|investment (view|opinion)|target price|stop[- ]?loss|take[- ]?profit)",
+        rt,
+        re.I,
+    ):
         return "advice"
     return "analysis"
 
@@ -304,6 +318,12 @@ def parse_trading_output(text, last_agent=None):
             stage = 'info'
         elif '推荐' in line and ('买入' in line or '卖出' in line or '持有' in line):
             stage = 'recommendation'
+        elif re.search(
+            r"(?i)\b(recommendation|rating|investment (view|opinion))\b.*\b("
+            r"buy|sell|hold|overweight|underweight|strong\s+buy|strong\s+sell)\b",
+            line,
+        ):
+            stage = 'recommendation'
         elif '市场分析师' in line:
             stage = 'market_analyst'
             agent = '市场分析师'
@@ -389,19 +409,19 @@ def get_analysts():
         {
             'id': '1',
             'name': 'DeepSeek',
-            'description': '推荐 - 最低成本: ¥1/百万tokens',
+            'description': 'Recommended — low cost (~¥1/M tokens)',
             'icon': '🧠'
         },
         {
             'id': '2',
             'name': 'Kimi',
-            'description': '中文优化 - 128k上下文',
+            'description': '128k context · strong for long documents',
             'icon': '🌙'
         },
         {
             'id': '3',
             'name': 'Gemini',
-            'description': 'Google · 多模态推理',
+            'description': 'Google · multimodal reasoning',
             'icon': '⚙'
         }
     ])
@@ -420,13 +440,13 @@ def get_chart_data():
     market_type = (data.get('market_type') or 'us').lower()
 
     if not raw_ticker or not start_date:
-        return jsonify({'error': '缺少必要参数'}), 400
+        return jsonify({'error': 'Missing required parameters'}), 400
 
     try:
         # 导入图表数据模块
         from fast_chart_data import get_wrds_chart_data
 
-        print(f"[图表] {raw_ticker} ({market_type})", flush=True)
+        print(f"[chart] {raw_ticker} ({market_type})", flush=True)
 
         # 获取图表数据（WRDS / efinance / yfinance / 本地库）
         chart_data = get_wrds_chart_data(
@@ -439,7 +459,7 @@ def get_chart_data():
         if chart_data is None:
             return jsonify({
                 'status': 'error',
-                'message': f'未找到 {raw_ticker} 的历史行情：请检查代码/市场类型，或先运行 python prefetch_ntca.py 预取本地库'
+                'message': f'No history for {raw_ticker}: check symbol/market or run python prefetch_ntca.py'
             }), 200
 
         chart_data = _json_safe(chart_data)
@@ -449,7 +469,7 @@ def get_chart_data():
         return jsonify({
             'status': 'success',
             'data': chart_data,
-            'message': '图表数据已就绪'
+            'message': 'Chart data ready'
         })
 
     except Exception as e:
@@ -466,7 +486,7 @@ def start_analysis():
     立即返回task_id，AI分析在后台进行
     """
     data = request.json
-    print(f"[分析] 收到 /api/analyze 请求", flush=True)
+    print(f"[Analyze] POST /api/analyze", flush=True)
 
     llm_choice = data.get('llm_choice', '1')
     _raw_ticker = (data.get('ticker') or '').strip()
@@ -474,14 +494,14 @@ def start_analysis():
     end_date = data.get('end_date')
     analysis_type = data.get('analysis_type', '1')
     market_type = (data.get('market_type') or 'us').lower()
-    report_language = (data.get('report_language') or 'zh').lower()
+    report_language = (data.get('report_language') or 'en').lower()
     ticker = _raw_ticker.upper() if market_type == 'us' else _raw_ticker
 
     # 验证输入
     if not ticker:
-        return jsonify({'error': '请输入股票代码'}), 400
+        return jsonify({'error': 'Ticker is required'}), 400
     if not start_date:
-        return jsonify({'error': '请输入开始日期'}), 400
+        return jsonify({'error': 'Start date is required'}), 400
 
     # 生成任务ID
     import uuid
@@ -512,8 +532,8 @@ def start_analysis():
                 report_language
             ]
 
-            print(f"[分析] [{task_id}] 开始运行分析进程...")
-            print(f"[分析] [{task_id}] 命令: {' '.join(cmd)}")
+            print(f"[Analyze] [{task_id}] starting subprocess...")
+            print(f"[Analyze] [{task_id}] cmd: {' '.join(cmd)}")
 
             # 子进程继承环境；为避免任何交互式提示，这里显式注入 WRDS_*（若可从 is/wrds.txt 读取）
             child_env = os.environ.copy()
@@ -521,9 +541,9 @@ def start_analysis():
             if wrds_creds:
                 child_env["WRDS_USERNAME"] = wrds_creds["username"]
                 child_env["WRDS_PASSWORD"] = wrds_creds["password"]
-                print(f"[分析] [{task_id}] 已自动加载 WRDS 账号（来自 is/wrds.txt / env）")
+                print(f"[Analyze] [{task_id}] WRDS credentials loaded (is/wrds.txt / env)")
             else:
-                print(f"[分析] [{task_id}] 未找到 WRDS 凭据（is/wrds.txt / env）")
+                print(f"[Analyze] [{task_id}] no WRDS credentials (is/wrds.txt / env)")
 
             # 强制从 is/api assents.txt 读取 LLM key，注入子进程环境，避免连接时缺失
             llm_keys = load_llm_api_keys() or {}
@@ -539,11 +559,11 @@ def start_analysis():
             if gm:
                 child_env["GEMINI_API_KEY"] = gm
                 child_env["GOOGLE_API_KEY"] = gm
-            print(f"[分析] [{task_id}] 已注入 LLM API keys（deepseek={bool(ds)}, kimi={bool(km)}, gemini={bool(gm)}）")
+            print(f"[Analyze] [{task_id}] injected LLM keys (deepseek={bool(ds)}, kimi={bool(km)}, gemini={bool(gm)})")
             child_env.setdefault("ANALYSIS_LLM_TIMEOUT_SEC", "90")
             child_env.setdefault("ANALYSIS_LLM_MAX_RETRIES", "1")
+            child_env["PYTHONUNBUFFERED"] = "1"
 
-            # 运行脚本并实时捕获输出
             process = subprocess.Popen(
                 cmd,
                 cwd=WORK_DIR,
@@ -553,51 +573,120 @@ def start_analysis():
                 text=True,
                 encoding='utf-8',
                 errors='replace',
-                bufsize=1  # 行缓冲
+                bufsize=1,
             )
 
-            print(f"[分析] [{task_id}] 进程已启动，PID: {process.pid}")
+            print(f"[Analyze] [{task_id}] subprocess PID: {process.pid}")
 
             _register_analysis_child(process)
 
-            line_count = 0
+            stdout_lines: list[str] = []
+            last_agent_holder: list = [None]
+
+            def _append_progress_item(item: dict) -> None:
+                with task_lock:
+                    if task_id not in task_cache:
+                        return
+                    task_cache[task_id].setdefault("progress", []).append(item)
+
+            def _drain_stdout() -> None:
+                try:
+                    if process.stdout is None:
+                        return
+                    for raw in iter(process.stdout.readline, ""):
+                        stdout_lines.append(raw)
+                        line = raw.rstrip("\r\n")
+                        if not line:
+                            continue
+                        parsed = parse_trading_output(line, last_agent_holder[0])
+                        if parsed:
+                            la = parsed.get("agent")
+                            if la:
+                                last_agent_holder[0] = la
+                            _append_progress_item(parsed)
+                except Exception as exc:
+                    print(f"[Analyze] [{task_id}] stdout reader: {exc}", flush=True)
+
+            drain_thread = threading.Thread(target=_drain_stdout, daemon=True)
+            drain_thread.start()
+
+            stop_heartbeat = threading.Event()
+
+            def _heartbeat_loop() -> None:
+                """So the UI/SSE are not silent for many minutes during long graph runs."""
+                first_wait = True
+                while True:
+                    delay_sec = 25.0 if first_wait else 45.0
+                    first_wait = False
+                    if stop_heartbeat.wait(delay_sec):
+                        break
+                    if process.poll() is not None:
+                        break
+                    _append_progress_item({
+                        'text': (
+                            '[Status] Still running — full multi-agent analysis often needs 3–15+ minutes. '
+                            'If you want a faster run, set environment variable ACCE_DIRECT_LLM_ONLY=1 '
+                            'and restart the web server.'
+                        ),
+                        'stage': 'heartbeat',
+                        'agent': None,
+                        'section': 'analysis',
+                        'timestamp': datetime.now().isoformat(),
+                    })
+                    try:
+                        _broadcast_progress_ws_throttled({
+                            'type': 'progress',
+                            'task_id': task_id,
+                            'data': {'text': '[Status] Still running (LLM / agents)…', 'agent': None},
+                        })
+                    except Exception:
+                        pass
+
+            hb_thread = threading.Thread(target=_heartbeat_loop, daemon=True)
+            hb_thread.start()
+
             return_code = None
-            stdout_chunks = []
             process_timeout_sec = int(os.environ.get("ANALYSIS_PROCESS_TIMEOUT_SEC", "3600"))
             try:
-                # 不做实时逐行读取，避免 readline 阻塞导致任务状态永远 running
-                out, _ = process.communicate(timeout=process_timeout_sec)
-                if out:
-                    stdout_chunks.append(out)
-                    line_count = out.count("\n")
-                return_code = process.returncode
+                return_code = process.wait(timeout=process_timeout_sec)
             except subprocess.TimeoutExpired:
                 try:
                     process.kill()
-                    out, _ = process.communicate(timeout=20)
-                    if out:
-                        stdout_chunks.append(out)
-                        line_count = out.count("\n")
+                except Exception:
+                    pass
+                try:
+                    process.wait(timeout=25)
                 except Exception:
                     pass
                 with task_lock:
                     if task_id in task_cache:
                         task_cache[task_id]['status'] = 'timeout'
-                        task_cache[task_id]['error'] = f'分析超时（子进程超过{process_timeout_sec}秒）'
+                        task_cache[task_id]['error'] = f'Analysis timed out (>{process_timeout_sec}s)'
                         task_cache[task_id]['end_time'] = datetime.now().isoformat()
                 output_capture.broadcast({
                     'type': 'error',
                     'task_id': task_id,
-                    'message': f'分析超时（子进程超过{process_timeout_sec}秒）'
+                    'message': f'Analysis timed out (>{process_timeout_sec}s)'
                 })
                 return
             finally:
+                stop_heartbeat.set()
+                try:
+                    hb_thread.join(timeout=3)
+                except Exception:
+                    pass
+                try:
+                    if process.stdout:
+                        process.stdout.close()
+                except Exception:
+                    pass
+                drain_thread.join(timeout=15)
                 _unregister_analysis_child(process)
 
-            print(f"[分析] [{task_id}] 进程完成，返回码: {return_code}")
-            print(f"[分析] [{task_id}] 总共处理了 {line_count} 行输出")
+            line_count = len(stdout_lines)
+            print(f"[Analyze] [{task_id}] done, exit={return_code}, lines={line_count}")
 
-            full_text = "".join(stdout_chunks)
+            full_text = "".join(stdout_lines)
             report_blob = {
                 'text': full_text,
                 'stage': 'complete_output',
@@ -606,19 +695,18 @@ def start_analysis():
                 'timestamp': datetime.now().isoformat()
             }
 
-            # 更新任务状态
             with task_lock:
                 if task_id in task_cache:
                     task_cache[task_id]['status'] = 'completed'
                     task_cache[task_id]['return_code'] = return_code
                     task_cache[task_id]['end_time'] = datetime.now().isoformat()
-                    task_cache[task_id]['progress'] = [report_blob]
+                    task_cache[task_id].setdefault('progress', []).append(report_blob)
 
             # 发送完成消息（不推送逐行 progress）
             output_capture.broadcast({
                 'type': 'complete',
                 'task_id': task_id,
-                'message': '分析完成',
+                'message': 'Analysis complete',
                 'return_code': return_code
             })
 
@@ -626,12 +714,12 @@ def start_analysis():
             with task_lock:
                 if task_id in task_cache:
                     task_cache[task_id]['status'] = 'timeout'
-                    task_cache[task_id]['error'] = '分析超时'
+                    task_cache[task_id]['error'] = 'Analysis timed out'
 
             output_capture.broadcast({
                 'type': 'error',
                 'task_id': task_id,
-                'message': '分析超时'
+                'message': 'Analysis timed out'
             })
         except Exception as e:
             with task_lock:
@@ -653,7 +741,7 @@ def start_analysis():
     return jsonify({
         'status': 'started',
         'task_id': task_id,
-        'message': 'AI分析已在后台启动',
+        'message': 'Analysis started in background',
         'ticker': ticker
     })
 
@@ -665,7 +753,7 @@ def get_task_status(task_id):
         task = task_cache.get(task_id)
 
     if not task:
-        return jsonify({'error': '任务不存在'}), 404
+        return jsonify({'error': 'Task not found'}), 404
 
     return jsonify({
         'task_id': task_id,
@@ -685,13 +773,17 @@ def get_task_result(task_id):
         task = task_cache.get(task_id)
 
     if not task:
-        return jsonify({'error': '任务不存在'}), 404
+        return jsonify({'error': 'Task not found'}), 404
 
     progress = task.get('progress') or []
     final_text = ""
     if progress:
-        # 当前实现中最后一条即 complete_output
-        final_text = progress[-1].get('text') or ""
+        for item in reversed(progress):
+            if item.get('stage') == 'complete_output' or item.get('report_only'):
+                final_text = item.get('text') or ''
+                break
+        if not final_text:
+            final_text = progress[-1].get('text') or ''
 
     return jsonify({
         'task_id': task_id,
@@ -705,57 +797,66 @@ def get_task_result(task_id):
 @app.route('/api/task/<task_id>/progress', methods=['GET'])
 def get_task_progress(task_id):
     """获取任务的详细进度（SSE流式传输）"""
+    @stream_with_context
     def generate():
         last_index = 0
 
         while True:
             with task_lock:
                 task = task_cache.get(task_id)
+                if not task:
+                    yield f"data: {json.dumps({'error': 'Task not found'})}\n\n"
+                    return
+                progress_list = list(task.get('progress') or [])
+                status = task.get('status')
+                nprog = len(progress_list)
+                pending = progress_list[last_index:nprog] if nprog > last_index else []
 
-            if not task:
-                yield f"data: {json.dumps({'error': '任务不存在'})}\n\n"
-                break
+            for progress_item in pending:
+                try:
+                    safe_item = _json_safe(progress_item)
+                    yield f"data: {json.dumps(safe_item, ensure_ascii=False)}\n\n"
+                except (TypeError, ValueError) as exc:
+                    yield f"data: {json.dumps({'error': 'Progress serialization failed', 'detail': str(exc)}, ensure_ascii=False)}\n\n"
+                    return
+            last_index += len(pending)
 
-            # 发送新的进度数据
-            progress_list = task.get('progress', [])
-            if len(progress_list) > last_index:
-                for i in range(last_index, len(progress_list)):
-                    progress_item = progress_list[i]
-                    yield f"data: {json.dumps(progress_item, ensure_ascii=False)}\n\n"
-                last_index = len(progress_list)
+            if status in ('completed', 'error', 'timeout'):
+                yield f"data: {json.dumps({'type': 'done', 'status': status}, ensure_ascii=False)}\n\n"
+                return
 
-            # 检查任务是否完成
-            status = task.get('status')
-            if status in ['completed', 'error', 'timeout']:
-                yield f"data: {json.dumps({'type': 'done', 'status': status})}\n\n"
-                break
-
-            # 等待一下再检查
-            import time
             time.sleep(0.5)
 
-    return Response(generate(), mimetype='text/event-stream')
+    return Response(
+        generate(),
+        mimetype='text/event-stream',
+        headers={
+            'Cache-Control': 'no-cache, no-transform',
+            'Connection': 'keep-alive',
+            'X-Accel-Buffering': 'no',
+        },
+    )
 
 
 @sock.route('/ws')
 def websocket_connection(ws):
     """WebSocket连接"""
-    print(f"[WebSocket] 新的连接请求")
+    print(f"[WebSocket] new connection")
     clients.append(ws)
     output_capture.add_client(ws)
 
     # 发送欢迎消息
     try:
-        ws.send(json.dumps({'type': 'connected', 'message': 'WebSocket连接成功'}))
+        ws.send(json.dumps({'type': 'connected', 'message': 'WebSocket connected'}))
     except Exception as e:
-        print(f"[WebSocket] 发送欢迎消息失败: {e}")
+        print(f"[WebSocket] welcome send failed: {e}")
 
     try:
         while True:
             data = ws.receive()
-            print(f"[WebSocket] 收到客户端消息: {data}")
+            print(f"[WebSocket] client message: {data}")
     except Exception as e:
-        print(f"[WebSocket] 连接异常: {e}")
+        print(f"[WebSocket] connection error: {e}")
     finally:
         output_capture.remove_client(ws)
         if ws in clients:
@@ -764,15 +865,15 @@ def websocket_connection(ws):
 
 if __name__ == '__main__':
     print("=" * 80)
-    print(" " * 20 + "ACCE v2.0 - Web 服务器")
+    print(" " * 20 + "ACCE v2.0 - Web server")
     print("=" * 80)
     print()
-    print("服务器启动中...")
-    print("访问地址: http://localhost:5000")
+    print("Starting server...")
+    print("Open: http://localhost:5000")
     print()
-    print("按 Ctrl+C 停止服务器")
-    print("提示: 若修改 templates/index.html 后浏览器仍像旧版，请对页面 Ctrl+F5 强刷；")
-    print("      仍无效则重启本进程。开发时可设环境变量 NTCA_DEV=1 启用 Flask debug+热重载。")
+    print("Press Ctrl+C to stop.")
+    print("Tip: After editing templates/index.html, hard-refresh the browser (Ctrl+F5).")
+    print("     Set NTCA_DEV=1 for Flask debug + auto-reload.")
     print("=" * 80)
     print()
 

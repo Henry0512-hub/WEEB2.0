@@ -22,7 +22,7 @@ def get_smart_config(ticker: str, base_config: dict) -> dict:
 
     # 优先检测是否为加密货币
     if is_cryptocurrency(ticker):
-        print(f"[INFO] 检测到加密货币代码 '{ticker}'，自动使用CoinGecko数据源")
+        print(f"[INFO] Crypto ticker '{ticker}' -> CoinGecko")
 
         # 为加密货币设置coingecko为首选数据源
         if "data_vendors" not in config:
@@ -44,7 +44,7 @@ def get_smart_config(ticker: str, base_config: dict) -> dict:
 
     # 检测是否为A股
     elif is_a_share_stock(ticker):
-        print(f"[INFO] 检测到A股代码 '{ticker}'，自动使用EFinance数据源")
+        print(f"[INFO] A-share '{ticker}' -> EFinance")
 
         # 为A股设置efinance为首选数据源
         if "data_vendors" not in config:
@@ -65,6 +65,12 @@ def get_smart_config(ticker: str, base_config: dict) -> dict:
         config["tool_vendors"]["get_fundamentals"] = "efinance,yfinance"
 
     else:
-        print(f"[INFO] 使用标准数据源 (yfinance) 分析 '{ticker}'")
+        dv = config.get("data_vendors") or {}
+        core = dv.get("core_stock_apis", "yfinance")
+        fund = dv.get("fundamental_data", "yfinance")
+        if core == "wrds":
+            print(f"[INFO] '{ticker}': OHLC=WRDS (coursework academic route); fundamentals={fund} (non-WRDS)")
+        else:
+            print(f"[INFO] '{ticker}': OHLC vendor={core}; fundamentals vendor={fund}")
 
     return config

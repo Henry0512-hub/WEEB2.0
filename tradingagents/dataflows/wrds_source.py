@@ -144,19 +144,52 @@ class WRDSConnection:
             self.db.close()
             self._connected = False
 
-# 全局连接实例
+# Global WRDS handle (wrds.Connection). Do not close the underlying connection
+# from call sites — closing poisons this singleton until reconnect.
 _wrds_connection = None
 
+
+def _wrds_engine_dead(db) -> bool:
+    if db is None:
+        return True
+    eng = getattr(db, "engine", None)
+    if eng is None:
+        return True
+    conn = getattr(db, "connection", None)
+    if conn is None:
+        return True
+    try:
+        return bool(getattr(conn, "closed", False))
+    except Exception:
+        return True
+
+
+def invalidate_wrds_connection() -> None:
+    """Mark global WRDS connection stale (e.g. after remote idle disconnect)."""
+    global _wrds_connection
+    if _wrds_connection is not None:
+        try:
+            _wrds_connection.close()
+        except Exception:
+            pass
+    _wrds_connection = None
+
+
 def get_wrds_connection():
-    """获取WRDS连接（自动重连）"""
+    """Return a live wrds.Connection; reconnect if the previous one was closed."""
     global _wrds_connection
 
-    # 如果连接不存在或已关闭，创建新连接
     if _wrds_connection is None or not _wrds_connection._connected:
         _wrds_connection = WRDSConnection()
         _wrds_connection.connect()
+    db = _wrds_connection.db
+    if _wrds_engine_dead(db):
+        invalidate_wrds_connection()
+        _wrds_connection = WRDSConnection()
+        _wrds_connection.connect()
+        db = _wrds_connection.db
 
-    return _wrds_connection.db
+    return db
 
 
 def get_stock_data_wrds(

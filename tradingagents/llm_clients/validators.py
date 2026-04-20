@@ -23,4 +23,8 @@ def validate_model(provider: str, model: str) -> bool:
     if provider_lower not in VALID_MODELS:
         return True
 
+    # Kimi / Moonshot OpenAI-compatible IDs (provider still "openai" in config)
+    if provider_lower == "openai" and model.startswith("moonshot-"):
+        return True
+
     return model in VALID_MODELS[provider_lower]

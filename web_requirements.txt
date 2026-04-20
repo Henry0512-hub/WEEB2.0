@@ -2,3 +2,7 @@ flask
 flask-sock
 flask-cors
 python-dotenv
+# Align with requests' supported urllib3/charset ranges (quiets RequestsDependencyWarning)
+urllib3>=2.2.0,<3
+charset-normalizer>=3.3.0,<4
+requests>=2.32.0

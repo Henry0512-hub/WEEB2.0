@@ -1,3 +1,5 @@
+import os
+
 from langchain_core.messages import HumanMessage, RemoveMessage
 
 # Import tools from separate utility files
@@ -41,6 +43,16 @@ def _is_chinese_output() -> bool:
     return lang in ("chinese", "中文", "zh", "zh-cn", "cn", "mandarin")
 
 
+def is_homework_simple_mode() -> bool:
+    """Short coursework-style prompts (default on). Web runner uses direct LLM by default in this mode.
+
+    Set ACCE_HOMEWORK_MODE=0 for long professional reports and full multi-agent graph (unless overridden).
+    Set ACCE_HOMEWORK_USE_FULL_GRAPH=1 to keep homework prompts but run the 8-agent graph from the web runner.
+    """
+    v = (os.environ.get("ACCE_HOMEWORK_MODE") or "1").strip().lower()
+    return v not in ("0", "false", "no", "off", "full", "pro", "professional")
+
+
 def get_professional_metrics_instruction(variant: str = "full") -> str:
     """Prompt block so final reports cite profitability, liquidity, leverage, and beta.
 
@@ -48,6 +60,26 @@ def get_professional_metrics_instruction(variant: str = "full") -> str:
         variant: ``full`` for fundamentals / portfolio synthesis; ``brief`` for debators/trader.
     """
     zh = _is_chinese_output()
+
+    if is_homework_simple_mode():
+        if variant == "brief":
+            if zh:
+                return " 有数据时请引用与结论相关的财务或估值要点（可 1–3 处）。"
+            return " Cite relevant fundamentals/valuation points when tools return them (1–3 touches)."
+        if zh:
+            return (
+                "\n\n【作业版·财务基本面】须覆盖「基本财务 + 基本面」要点（无需长篇研报）："
+                "至少从工具可得数据中讨论 **盈利能力或成长性**（如营收/利润/利润率之一）、"
+                "**估值**（如 P/E、P/B 等若有）、**杠杆或流动性**（如负债率、流动比率等若有）中的 **两类**，"
+                "每类用一两句话带数字；缺失的维度写「数据未提供」。不必做大表，可列表简述。"
+            )
+        return (
+            "\n\n**Coursework fundamentals:** Cover **basic financials + business fundamentals** (not a long note): "
+            "from tool output, address **two of** profitability/growth (e.g. revenue, margins), "
+            "valuation (e.g. P/E, P/B if available), leverage/liquidity (e.g. debt ratios, current ratio)—"
+            "one or two sentences each with numbers. If a dimension is missing, say data not provided. "
+            "A short bullet list is fine; no institutional tables."
+        )
 
     if variant == "brief":
         if zh:
@@ -82,6 +114,11 @@ def get_professional_metrics_instruction(variant: str = "full") -> str:
 
 def get_data_grounding_instruction() -> str:
     """Require reports to cite only numbers present in tool outputs; forbid invented figures."""
+    if is_homework_simple_mode():
+        if _is_chinese_output():
+            return "\n\n【数据】数字须来自本次工具输出；没有的不要编造，写「数据未提供」。"
+        return "\n\n**Data:** Use only numbers from this run’s tools; do not invent—say not provided if missing."
+
     if _is_chinese_output():
         return (
             "\n\n【数据真实性约束】最终报告、技术分析与财务分析只能使用本次任务中工具返回、"

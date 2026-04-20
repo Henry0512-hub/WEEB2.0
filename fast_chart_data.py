@@ -39,32 +39,31 @@ def get_wrds_data(ticker, start_date, end_date):
     Returns:
         DataFrame: 包含OHLCV数据的DataFrame
     """
-    print(f"[WRDS数据] 正在从WRDS获取 {ticker} 数据...")
-    print(f"[WRDS数据] 日期范围: {start_date} 到 {end_date}")
+    print(f"[WRDS] Fetching {ticker} ...")
+    print(f"[WRDS] Range: {start_date} .. {end_date}")
 
     try:
         creds = load_wrds_credentials()
         if not creds:
             print(
-                "[WRDS数据] 未配置凭据：请在项目 is/wrds.txt 写入 username/password，"
-                "或设置环境变量 WRDS_USERNAME、WRDS_PASSWORD。"
+                "[WRDS] No credentials: set is/wrds.txt (username/password) or "
+                "WRDS_USERNAME / WRDS_PASSWORD."
             )
             return None
-        print(f"[WRDS数据] 连接WRDS（用户: {creds['username']}）...")
+        print(f"[WRDS] Connecting (user: {creds['username']})...")
 
         db = get_wrds_connection()
-        print(f"[WRDS数据] 连接成功！")
+        print(f"[WRDS] Connected.")
 
-        # 查询CRSP股票数据
-        print(f"[WRDS数据] 查询CRSP数据库...")
+        print(f"[WRDS] Querying CRSP ...")
         query = f"""
         SELECT
             a.date,
-            a.prc AS close_price,  -- 收盘价
-            COALESCE(a.openprc, a.prc) AS open_price,  -- 开盘价（字段兼容）
-            a.askhi AS high_price, -- 最高价
-            a.bidlo AS low_price,  -- 最低价
-            a.vol AS volume        -- 成交量
+            a.prc AS close_price,
+            COALESCE(a.openprc, a.prc) AS open_price,
+            a.askhi AS high_price,
+            a.bidlo AS low_price,
+            a.vol AS volume
         FROM
             crsp.dsf AS a
         INNER JOIN
@@ -82,7 +81,7 @@ def get_wrds_data(ticker, start_date, end_date):
         df = db.raw_sql(query)
 
         if df is None or len(df) == 0:
-            print(f"[WRDS数据] 未找到数据，尝试备用查询...")
+            print(f"[WRDS] No rows; trying fallback query...")
             # 备用查询：只用ticker
             query2 = f"""
             SELECT
@@ -102,7 +101,7 @@ def get_wrds_data(ticker, start_date, end_date):
             """
             df = db.raw_sql(query2)
 
-        db.close()
+        # Keep global WRDS connection open (see wrds_source.get_wrds_connection).
 
         if df is None or len(df) == 0:
             print(f"[WRDS Data] Not found: {ticker} in WRDS")
@@ -144,35 +143,74 @@ def get_wrds_data(ticker, start_date, end_date):
         df.sort_index(inplace=True)
 
         print(f"[WRDS Data] Successfully got {len(df)} trading days")
-        print(f"[WRDS数据] 日期范围: {df.index[0].strftime('%Y-%m-%d')} 到 {df.index[-1].strftime('%Y-%m-%d')}")
-        print(f"[WRDS数据] 价格范围: ${df['LOW'].min():.2f} - ${df['HIGH'].max():.2f}")
+        print(f"[WRDS] Dates: {df.index[0].strftime('%Y-%m-%d')} .. {df.index[-1].strftime('%Y-%m-%d')}")
+        print(f"[WRDS] Price range: ${df['LOW'].min():.2f} - ${df['HIGH'].max():.2f}")
 
         return df
 
     except Exception as e:
-        print(f"[WRDS数据] 失败: {e}")
+        print(f"[WRDS] Failed: {e}")
+        try:
+            from tradingagents.dataflows.wrds_source import invalidate_wrds_connection
+
+            invalidate_wrds_connection()
+        except Exception:
+            pass
         return None
 
 
 def get_us_yfinance_data(ticker, start_date, end_date):
     """US fallback when WRDS connection is unavailable."""
+    import time
+
+    sym = ticker.upper()
+    print(f"[yfinance] Fetching {sym} ...")
+
     try:
-        print(f"[yfinance] 正在获取 {ticker} 数据...")
-        # yfinance end is exclusive for daily bars; extend one day.
+        from ntca_platform.fetchers import _yf_ticker_history
+    except ImportError:
+        _yf_ticker_history = None
+
+    if _yf_ticker_history is not None:
+        for attempt in range(3):
+            try:
+                ydf = _yf_ticker_history(sym, start_date, end_date)
+                if ydf is not None and len(ydf) > 0:
+                    print(f"[yfinance] Got {len(ydf)} rows (Ticker.history)")
+                    return ydf
+            except Exception as e:
+                print(f"[yfinance] attempt {attempt + 1}/3: {e}")
+            time.sleep(1.2 * (attempt + 1))
+
+    try:
         end_dt = datetime.strptime(end_date, "%Y-%m-%d") + timedelta(days=1)
-        df = yf.download(
-            ticker.upper(),
-            start=start_date,
-            end=end_dt.strftime("%Y-%m-%d"),
-            interval="1d",
-            auto_adjust=False,
-            progress=False,
-        )
+        for attempt in range(3):
+            try:
+                df = yf.download(
+                    sym,
+                    start=start_date,
+                    end=end_dt.strftime("%Y-%m-%d"),
+                    interval="1d",
+                    auto_adjust=False,
+                    progress=False,
+                )
+                break
+            except Exception as e:
+                err = str(e).lower()
+                if "rate" in err or "too many" in err:
+                    print(f"[yfinance] rate limited, retry {attempt + 1}/3 ...")
+                    time.sleep(2.0 * (attempt + 1))
+                    df = None
+                    continue
+                print(f"[yfinance] Failed: {e}")
+                return None
+        else:
+            df = None
+
         if df is None or len(df) == 0:
-            print(f"[yfinance] 未找到 {ticker} 数据")
+            print(f"[yfinance] No data for {sym}")
             return None
 
-        # Normalize columns to the same schema used by chart preparation.
         if "Open" not in df.columns:
             return None
         out = pd.DataFrame(index=df.index.copy())
@@ -184,10 +222,10 @@ def get_us_yfinance_data(ticker, start_date, end_date):
         out = out.dropna(subset=["OPEN", "HIGH", "LOW", "CLOSE"]).sort_index()
         if len(out) == 0:
             return None
-        print(f"[yfinance] 成功获取 {len(out)} 条记录")
+        print(f"[yfinance] Got {len(out)} rows (download)")
         return out
     except Exception as e:
-        print(f"[yfinance] 失败: {e}")
+        print(f"[yfinance] Failed: {e}")
         return None
 
 
@@ -198,7 +236,7 @@ def calculate_indicators(df):
     Returns:
         dict: 包含各种技术指标的字典
     """
-    print(f"[技术指标] 计算技术指标...")
+    print(f"[Indicators] Computing ...")
 
     indicators = {}
 
@@ -285,7 +323,7 @@ def prepare_chart_data(
         data_source_label: WRDS / NTCA_DB / efinance / yfinance
         ntca_mode: wrds | local_db | live
     """
-    print(f"[图表数据] 准备富途牛牛格式图表数据...")
+    print(f"[Chart] Preparing payload ...")
 
     # 基础数据
     dates = df.index.strftime('%Y-%m-%d').tolist()
@@ -330,7 +368,7 @@ def prepare_chart_data(
     }
 
     print(f"[Chart Data] Preparation completed")
-    print(f"[图表数据] 当前价格: ${current:.2f} ({change:+.2f}, {change_pct:+.2f}%)")
+    print(f"[Chart] Last close: ${current:.2f} ({change:+.2f}, {change_pct:+.2f}%)")
 
     return chart_data
 
@@ -359,14 +397,14 @@ def get_wrds_chart_data(ticker, start_date, end_date, market_type="us"):
     if resolve_symbol is None or load_range is None:
         df = get_wrds_data(ticker, start_date, end_date)
         if df is None or len(df) == 0:
-            print("[错误] 无法获取数据（NTCA 模块未加载）")
+            print("[Error] No data (NTCA module not loaded)")
             return None
         indicators = calculate_indicators(df)
         return prepare_chart_data(df, indicators, ticker, "US", "WRDS", "wrds")
 
     resolved = resolve_symbol(ticker, mt)
     if not resolved:
-        print("[错误] 无法解析股票代码")
+        print("[Error] Could not resolve symbol")
         return None
 
     s, e = clamp_to_ntca_window(start_date, end_date)
@@ -447,7 +485,7 @@ def get_wrds_chart_data(ticker, start_date, end_date, market_type="us"):
             mode = "wrds"
 
     if df is None or len(df) == 0:
-        print("[错误] 无法获取数据（请运行 python prefetch_ntca.py 预取本地库）")
+        print("[Error] No data (run python prefetch_ntca.py to prefetch local DB)")
         return None
 
     indicators = calculate_indicators(df)
@@ -457,7 +495,7 @@ def get_wrds_chart_data(ticker, start_date, end_date, market_type="us"):
 
     print()
     print("=" * 80)
-    print(f"[OK] 图表数据准备完成！数据点: {len(df)}  | 模式: {mode} | 来源: {src_label}")
+    print(f"[OK] Chart ready | bars={len(df)} | mode={mode} | source={src_label}")
     print("=" * 80)
 
     return chart_data
@@ -470,15 +508,15 @@ if __name__ == "__main__":
 
     if result:
         print("\n" + "="*80)
-        print("数据预览:")
-        print(f"股票代码: {result['ticker']}")
-        print(f"当前价格: ${result['data']['summary']['current']}")
-        print(f"涨跌: {result['data']['summary']['change']:.2f} ({result['data']['summary']['change_pct']:.2f}%)")
-        print(f"数据点: {len(result['data']['ohlcv']['date'])}")
-        print(f"指标数量: {len(result['data']['indicators'])}")
+        print("Preview:")
+        print(f"Ticker: {result['ticker']}")
+        print(f"Last: ${result['data']['summary']['current']}")
+        print(f"Change: {result['data']['summary']['change']:.2f} ({result['data']['summary']['change_pct']:.2f}%)")
+        print(f"Bars: {len(result['data']['ohlcv']['date'])}")
+        print(f"Indicators: {len(result['data']['indicators'])}")
         print("="*80)
 
         # 保存到文件测试
         with open('chart_data_test.json', 'w', encoding='utf-8') as f:
             json.dump(result, f, ensure_ascii=False, indent=2)
-        print("\n已保存到: chart_data_test.json")
+        print("\nSaved: chart_data_test.json")
