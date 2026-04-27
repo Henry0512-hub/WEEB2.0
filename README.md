@@ -1,3 +1,20 @@
+
+#WERITE in the front
+very quick start
+step1 download zip
+step2 open is 
+step3 create a new txt input your wrds user and password like this
+username: henghye24
+password: BHGHugyyu#
+(that is an example,and totally fake,just input in such mode)
+step4 save the txt search for 启动ACCE Web
+step5 double click it.
+step6 you can use it
+Remender: all apis only have the login gift money and can not use too much and if you want to use it please go into is/api assents to change those into yours own keys. Also I sincerely recommand deepseek and Kimi to analysis for the genimi is not stable enough.
+
+
+
+
 # TradingAgents - ACCE v2.0 (AI Trading Analysis Platform)
 
 **Quick start (Windows, no garbled console):** double-click **`QUICKSTART.bat`** in the folder that contains `web_backend.py`, then open **http://localhost:5000**. Details: **`QUICKSTART.md`**.
